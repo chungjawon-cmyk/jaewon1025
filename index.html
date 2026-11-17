@@ -256,6 +256,17 @@ tbody td.use{white-space:normal;color:var(--panel-soft);font-size:14px;padding-r
 .more-body{display:flex;flex-direction:column;gap:10px;padding-bottom:16px}
 .time input::placeholder{color:var(--muted);opacity:.7;font-size:18px}
 
+/* reel */
+.ig-row{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start}
+.ig-row .posts{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.ig-row .post{padding:22px}
+.ig-row .p1 p{font-size:22px} .ig-row .p3 p{font-size:22px} .ig-row .p2 p{font-size:17px}
+.ig-row .watch{width:96px;height:96px}
+.reel{margin:0;display:flex;flex-direction:column;gap:8px}
+.reel video{display:block;width:100%;max-width:100%;aspect-ratio:9/16;border-radius:20px;background:var(--panel);border:1px solid var(--line);object-fit:cover}
+.reel figcaption{font-size:13px;color:var(--muted);text-align:center}
+@media (max-width:720px){.ig-row{grid-template-columns:minmax(0,1fr)}.reel{width:min(240px,100%);margin:0 auto}}
+
 /* go button */
 .go{width:100%;min-height:54px;border-radius:14px;border:2px solid var(--on-accent);background:var(--accent);color:var(--on-accent);font:inherit;font-size:17px;font-weight:700;cursor:pointer}
 .go:hover{filter:brightness(0.96)}
@@ -735,6 +746,11 @@ footer .col{display:flex;flex-direction:column;gap:8px;max-width:36em}
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"/></svg>
         @sanso.calc 팔로우</a>
     </div>
+    <div class="ig-row">
+    <figure class="reel">
+      <video id="reel" src="media/sanso-calc-reel.mp4" poster="media/reel-poster.jpg" muted loop playsinline controls preload="metadata" aria-label="산소계산소 15초 소개 영상"></video>
+      <figcaption>15초 릴스 · 소리는 켜서 들어보세요</figcaption>
+    </figure>
     <div class="posts">
       <article class="post p1" aria-label="카드뉴스 1/3">
         <span class="idx">1 / 3</span>
@@ -755,6 +771,7 @@ footer .col{display:flex;flex-direction:column;gap:8px;max-width:36em}
         <p>내 기록으로<br>내 페이스 계산하기</p>
         <div class="cta"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>프로필 링크에서 무료로</div>
       </article>
+    </div>
     </div>
   </section>
 
@@ -1317,6 +1334,12 @@ footer .col{display:flex;flex-direction:column;gap:8px;max-width:36em}
     try{var v=localStorage.getItem(key);if(v&&(force||!el.value))el.value=v;}catch(e){}
     el.addEventListener('change',function(){try{if(el.value)localStorage.setItem(key,el.value);else localStorage.removeItem(key);}catch(e){}});
   }
+  (function(){
+    var v=$('reel');if(!v)return;
+    var still=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(still||!('IntersectionObserver' in window))return;
+    new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var p=v.play();if(p&&p.catch)p.catch(function(){});}else v.pause();});},{threshold:0.4}).observe(v);
+  })();
   remember('hr-max','sanso-hrmax');
   remember('k-w','sanso-weight',true);
   render();
