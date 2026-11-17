@@ -1,0 +1,1311 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="내 레이스 기록으로 VDOT과 훈련 존별 페이스, 러닝 판정, 칼로리를 계산하는 러닝 페이스 사이트">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>산소계산소</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: stacked full-width bands, 1200px inner column; data in mono, copy in Plex Sans KR */
+:root{
+  --bg:#F3F4EF; --band:#E6E8E0; --card:#FFFFFF; --ink:#101413; --text:#3B423F; --muted:#4A524E;
+  --line:#D8DBD2; --line-strong:#B9BEB3; --link:#2747D8;
+  --panel:#101413; --panel-text:#E8EBE4; --panel-muted:#A3ACA7; --panel-line:#2C3330; --panel-soft:#C3CAC6;
+  --accent:#D4F53C; --on-accent:#101413;
+  --sans:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1211; --band:#151A18; --card:#181E1C; --ink:#EEF1EA; --text:#C3CAC6; --muted:#A3ACA7;
+  --line:#2A312E; --line-strong:#3E4643; --link:#9DB4FF;
+  --panel:#1B2220; --panel-text:#EEF1EA; --panel-muted:#A3ACA7; --panel-line:#323A37; --panel-soft:#C3CAC6;
+  --accent:#D4F53C; --on-accent:#101413; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1211; --band:#151A18; --card:#181E1C; --ink:#EEF1EA; --text:#C3CAC6; --muted:#A3ACA7;
+  --line:#2A312E; --line-strong:#3E4643; --link:#9DB4FF;
+  --panel:#1B2220; --panel-text:#EEF1EA; --panel-muted:#A3ACA7; --panel-line:#323A37; --panel-soft:#C3CAC6;
+  --accent:#D4F53C; --on-accent:#101413; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;word-break:keep-all}
+a{color:var(--ink)} a:hover{color:var(--link)}
+:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+h1,h2,h3{text-wrap:balance;margin:0;letter-spacing:-0.025em}
+p{margin:0}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.section{padding-block:88px}
+.band{background:var(--band);border-block:1px solid var(--line)}
+.dark{background:var(--panel);color:var(--panel-text)}
+.eyebrow{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.06em;color:var(--muted)}
+.dark .eyebrow{color:var(--accent)}
+.h2{font-size:clamp(28px,3.6vw,42px);line-height:1.25}
+.lead{font-size:18px;color:var(--text);max-width:38em}
+.dark .lead{color:var(--panel-soft)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+
+/* header */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.brand-mark{width:36px;height:36px;border-radius:10px;background:var(--panel);color:var(--accent);display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:16px}
+.brand-mark sub{font-size:10px}
+.brand-name{display:flex;flex-direction:column;line-height:1.15}
+.brand-name b{font-size:19px;letter-spacing:-0.02em}
+.brand-name small{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.navlinks{display:flex;flex-wrap:wrap;align-items:center;gap:0 18px;font-size:15px;font-weight:500}
+.navlinks a{text-decoration:none;padding:10px 0}
+.pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;background:var(--ink);color:var(--bg)!important;text-decoration:none;font-weight:600}
+@media (max-width:720px){.navlinks .hide-sm{display:none}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:999px;font-weight:700;font-size:17px;text-decoration:none;border:2px solid var(--ink);transition:transform .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-accent{background:var(--accent);color:var(--on-accent);border-color:var(--on-accent)}
+.btn-accent:hover{color:var(--on-accent)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+@media (prefers-reduced-motion: reduce){.btn{transition:none}.btn:hover{transform:none}}
+
+/* hero */
+.hero{display:grid;gap:48px;align-items:center;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));padding-block:80px 88px}
+.hero h1{font-size:clamp(40px,6vw,72px);line-height:1.12;letter-spacing:-0.035em}
+.hero .lead{font-size:19px}
+.hero .lead strong{color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:12px}
+.fine{font-size:14px;color:var(--muted)}
+.datacard{background:var(--panel);color:var(--panel-text);border-radius:24px;padding:32px;display:flex;flex-direction:column;gap:22px}
+.datacard .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;color:var(--panel-muted)}
+.tag{background:var(--accent);color:var(--on-accent);padding:4px 10px;border-radius:999px;font-weight:600}
+.big{display:flex;align-items:flex-end;gap:14px}
+.big .n{font-family:var(--mono);font-size:88px;line-height:.9;font-weight:600;letter-spacing:-0.04em}
+.big span:last-child{color:var(--panel-muted);padding-bottom:8px}
+.kv{display:flex;flex-direction:column;border-top:1px solid var(--panel-line)}
+.kv div{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--panel-line)}
+.kv div:last-child{border-bottom:0}
+.kv .mono{font-weight:500}
+.kv small{color:var(--panel-muted);font-size:14px}
+.hl{color:var(--accent)}
+
+/* cards */
+.card{background:var(--bg);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:10px}
+.card .num{font-family:var(--mono);font-size:14px;color:var(--link);font-weight:600}
+.card h3{font-size:21px}
+.card p{color:var(--text)}
+
+/* calculator */
+.calc{display:flex;flex-wrap:wrap;gap:24px;align-items:stretch}
+.inputs{flex:1 1 340px;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:26px}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend,.label{font-weight:600;font-size:16px;padding:0;margin-bottom:12px;display:block}
+.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.seg button{min-height:48px;border-radius:12px;font:inherit;font-weight:600;cursor:pointer;border:1.5px solid var(--line-strong);background:var(--card);color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.time{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.time label{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+.time input{height:56px;width:100%;padding:0 12px;border:1.5px solid var(--line-strong);border-radius:12px;font-family:var(--mono);font-size:22px;color:var(--ink);background:var(--bg)}
+.presets{display:flex;flex-wrap:wrap;gap:8px}
+.presets button{min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:15px;font-weight:500;cursor:pointer}
+.presets button:hover{border-color:var(--ink)}
+.presets button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.summary{margin-top:auto;background:var(--bg);border-radius:12px;padding:16px;font-size:14px;color:var(--text)}
+.summary strong{color:var(--ink);font-family:var(--mono)}
+.result{flex:999 1 560px;min-width:0;background:var(--panel);color:var(--panel-text);border-radius:20px;padding:32px;display:flex;flex-direction:column;gap:24px}
+.result-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px}
+.result .big .n{font-size:96px;color:var(--accent)}
+.preds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 24px;font-size:14px}
+.preds div{display:flex;justify-content:space-between;gap:12px}
+.preds span:first-child{color:var(--panel-muted)}
+.tablebox{overflow-x:auto;border-top:1px solid var(--panel-line)}
+table{width:100%;min-width:540px;border-collapse:collapse;font-size:15px}
+caption{text-align:left;padding:16px 0 8px;color:var(--panel-muted);font-size:13px;font-family:var(--mono);letter-spacing:.06em}
+thead th{text-align:left;color:var(--panel-muted);font-size:13px;font-weight:500;padding:10px 12px}
+thead th:first-child{padding-left:0}
+tbody tr{border-top:1px solid var(--panel-line)}
+tbody th{text-align:left;padding:15px 12px 15px 0;font-weight:600;white-space:nowrap}
+tbody th .code{display:inline-block;min-width:26px;font-family:var(--mono);color:var(--accent)}
+tbody td{padding:15px 12px;white-space:nowrap}
+tbody td.use{white-space:normal;color:var(--panel-soft);font-size:14px;padding-right:0}
+.err{padding:20px 0;display:flex;flex-direction:column;gap:8px}
+.err b{font-size:22px}
+.err span{color:var(--panel-muted)}
+.note{font-size:13px;color:var(--panel-muted)}
+
+/* judge */
+.seg6{grid-template-columns:repeat(3,minmax(0,1fr))}
+.judge-out{flex:999 1 560px;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:32px;display:flex;flex-direction:column;gap:22px}
+.verdict{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.badge{font-family:var(--mono);font-weight:600;font-size:15px;padding:6px 14px;border-radius:999px;border:2px solid var(--ink)}
+.badge.ok{background:var(--accent);color:var(--on-accent);border-color:var(--on-accent)}
+.badge.warn{background:var(--ink);color:var(--bg)}
+.verdict h3{font-size:26px;line-height:1.3}
+.jmsg{color:var(--text);font-size:17px;max-width:40em}
+.jstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,128px),1fr));gap:10px}
+.jstats b{font-family:var(--sans);font-size:18px;font-weight:700;line-height:1.35}
+.jstats div{background:var(--bg);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.jstats span{font-size:13px;color:var(--muted)}
+.jstats b{font-family:var(--mono);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.scale span{text-align:center;padding:10px 2px;border-radius:8px;background:var(--bg);color:var(--muted);font-size:13px;font-weight:600;border:2px solid transparent;line-height:1.3}
+.scale span small{display:block;font-family:var(--mono);font-weight:500;font-size:11px}
+.scale span.target{border-color:var(--ink);border-style:dashed;color:var(--ink)}
+.scale span.here{background:var(--accent);color:var(--on-accent);border-color:var(--on-accent);border-style:solid}
+.scale-legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
+.scale-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:center}
+.scale-label{font-size:13px;font-weight:600;color:var(--muted)}
+.hrnote{background:var(--bg);border-radius:12px;padding:14px 16px;font-size:16px;max-width:none;border:1.5px solid var(--line-strong)}
+.hrnote b{color:var(--ink)}
+.zonecard{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:16px}
+.zonebox{overflow-x:auto}
+.ztable{min-width:560px}
+.ztable thead th{color:var(--muted)}
+.ztable tbody tr{border-top:1px solid var(--line)}
+.ztable tbody th .code{color:var(--link)}
+.ztable td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ztable td.dim{font-family:var(--sans);color:var(--muted);font-size:14px}
+
+/* kcal */
+.kcal-out{flex:999 1 560px;min-width:0;background:var(--panel);color:var(--panel-text);border-radius:20px;padding:32px;display:flex;flex-direction:column;gap:22px}
+.kcal-out .big .n{color:var(--accent)}
+.kstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:12px}
+.kstats div{border:1px solid var(--panel-line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kstats span{font-size:13px;color:var(--panel-muted)}
+.kstats b{font-family:var(--mono);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.kstats small{font-size:13px;color:var(--panel-soft)}
+.water{border-radius:12px;padding:16px;background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--panel-text);font-size:15px}
+.water b{color:var(--accent);font-family:var(--mono)}
+.kcal-out .fine{color:var(--panel-muted)}
+
+/* pace gauge */
+.gauge{display:flex;flex-direction:column;gap:6px;padding:4px 4px 0}
+.g-track{position:relative;height:36px;border-radius:999px;background:var(--bg);border:1px solid var(--line);margin-top:34px;margin-bottom:30px}
+.g-band{position:absolute;top:-2px;bottom:-2px;background:color-mix(in srgb,var(--link) 18%,transparent);border:2px dashed var(--link);border-radius:999px}
+.g-blab{position:absolute;top:calc(100% + 8px);transform:translateX(-50%);font-family:var(--mono);font-size:13px;font-weight:600;color:var(--link);white-space:nowrap}
+.g-dot{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:var(--accent);border:3px solid var(--ink);transform:translate(-50%,-50%)}
+.g-tag{position:absolute;bottom:calc(100% + 8px);transform:translateX(-50%);font-family:var(--mono);font-size:13px;font-weight:600;white-space:nowrap;background:var(--ink);color:var(--bg);padding:3px 9px;border-radius:6px}
+.g-ends{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.jstats b.fast{color:#B3261E} .jstats b.slow{color:var(--link)} .jstats b.good{color:#1F7A3A}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .jstats b.fast{color:#FF8A80}:root:not([data-theme="light"]) .jstats b.good{color:#7DDB94}}
+:root[data-theme="dark"] .jstats b.fast{color:#FF8A80} :root[data-theme="dark"] .jstats b.good{color:#7DDB94}
+
+.planlist{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px;color:var(--text);font-size:16px}
+.planlist li::marker{font-family:var(--mono);font-weight:600;color:var(--ink)}
+.planlist li b{color:var(--ink)}
+.planlist li.warn{color:var(--ink);font-weight:600}
+
+.calc-head{display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:flex-start}
+.calc-head>.stack{flex:1 1 360px;min-width:0}
+.vinfo{flex:1 1 360px;max-width:540px;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:10px}
+.vinfo h3{font-size:19px}
+.vinfo p,.vinfo li{color:var(--text);font-size:15px}
+.vinfo b{color:var(--ink)}
+.vinfo ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.vinfo a{font-weight:600;font-size:15px;align-self:flex-start;padding:6px 0}
+
+.rank{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.rank-pill{background:var(--accent);color:var(--on-accent);font-weight:700;padding:4px 12px;border-radius:999px;font-size:15px;white-space:nowrap}
+.rank-cap{color:var(--panel-muted);font-size:13px}
+.rank-bar{height:8px;border-radius:999px;background:var(--panel-line);overflow:hidden;width:100%;max-width:320px}
+.rank-fill{height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .4s ease}
+@media (prefers-reduced-motion: reduce){.rank-fill{transition:none}}
+
+/* save + log */
+.save{width:100%;min-height:48px;border-radius:14px;border:2px solid var(--ink);background:transparent;color:var(--ink);font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+.save:hover{background:var(--bg)}
+.save:disabled{opacity:.55;cursor:default}
+.saved{font-size:14px;color:var(--muted);min-height:1.4em;margin-top:-14px}
+.logs{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.logcard{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.logcard h3{font-size:20px}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart .empty{min-height:170px;display:grid;place-items:center;color:var(--muted);font-size:14px;background:var(--bg);border-radius:12px;text-align:center;padding:16px}
+.chart .ax{stroke:var(--line);stroke-width:1}
+.chart .tick{fill:var(--muted);font-size:12px;font-family:var(--mono)}
+.chart .pt{fill:var(--link);stroke:var(--card);stroke-width:2}
+.chart .ln{stroke:var(--ink);fill:none;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .vln{stroke:var(--link);fill:none;stroke-width:2.5;stroke-linejoin:round}
+.chart .last{font-family:var(--mono);font-size:13px;font-weight:600;fill:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line-strong);background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.legend i.dot{width:10px;height:10px;border-radius:50%;background:var(--link)}
+.legend i.line{width:18px;height:3px;background:var(--ink)}
+.logtable{min-width:560px}
+.logtable td{font-family:var(--sans);font-size:15px;color:var(--text)}
+.logtable td:first-child{font-family:var(--mono);color:var(--ink)}
+.del{min-width:56px;min-height:40px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;border-radius:8px;font:inherit;font-size:14px}
+.del:hover{color:var(--ink);background:var(--bg)}
+.del.armed{color:#B3261E;border-color:currentColor}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* go button */
+.go{width:100%;min-height:54px;border-radius:14px;border:2px solid var(--on-accent);background:var(--accent);color:var(--on-accent);font:inherit;font-size:17px;font-weight:700;cursor:pointer}
+.go:hover{filter:brightness(0.96)}
+.go:active{transform:translateY(1px)}
+.result,.judge-out,.kcal-out{scroll-margin-top:84px}
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--accent)}40%{box-shadow:0 0 0 6px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.flash{animation:flash .9s ease-out}
+@media (prefers-reduced-motion: reduce){.flash{animation:none}}
+
+/* how */
+.step{border:1px solid var(--panel-line);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:12px}
+.step .num{font-family:var(--mono);font-size:40px;font-weight:600;color:var(--accent);line-height:1}
+.step h3{font-size:20px}
+.step p{color:var(--panel-soft)}
+
+/* zones */
+.zones{border-top:2px solid var(--ink)}
+.zone{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px 32px;padding-block:26px;border-bottom:1px solid var(--line-strong)}
+.zone .name{display:flex;align-items:baseline;gap:14px}
+.zone .name .mono{font-size:32px;font-weight:600}
+.zone .name span:last-child{font-size:20px;font-weight:600}
+.zone p{color:var(--text)}
+.zone .ex{font-family:var(--mono);font-size:14px;color:var(--muted)}
+
+/* plan */
+.split{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px}
+.day{background:var(--bg);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:10px}
+.day .when{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.chip{align-self:flex-start;font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--line);color:var(--ink)}
+.chip.hard{background:var(--ink);color:var(--bg)}
+.day b{font-size:18px}
+.day p{color:var(--text);font-size:15px}
+
+/* insta */
+.posts{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.post{aspect-ratio:1/1;max-width:100%;border-radius:16px;padding:28px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.post .idx{font-family:var(--mono);font-size:12px}
+.post p{font-weight:700;line-height:1.3}
+.p1{background:var(--panel);color:var(--panel-text)} .p1 .idx{color:var(--panel-muted)} .p1 p{font-size:26px}
+.p2{background:var(--card);border:2px solid var(--ink)} .p2 .idx{color:var(--muted)} .p2 p{font-size:20px;line-height:1.35}
+.p2 .r{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--line-strong)}
+.p2 .r:last-child{border:0;padding:0}
+.p2 .r b{font-weight:600}
+.p2 .hlbox{font-size:20px;font-weight:600;background:var(--accent);color:var(--on-accent);padding:0 8px;border-radius:6px}
+.p3{background:var(--accent);color:var(--on-accent)} .p3 p{font-size:28px}
+.p3 .cta{display:flex;align-items:center;gap:10px;font-weight:600}
+.watch{align-self:center}
+
+/* gear */
+.gear{background:var(--card)}
+.item{border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.ph{height:150px;border-radius:12px;background:var(--band);display:grid;place-items:center;color:var(--muted);font-family:var(--mono);font-size:13px}
+.item .for{font-size:13px;font-weight:600;color:var(--link)}
+.item h3{font-size:20px}
+.item p{color:var(--text);font-size:15px}
+.item a{margin-top:auto;display:inline-flex;align-items:center;min-height:44px;font-weight:600}
+.ph{color:var(--ink)}
+.item .tip{font-size:14px;color:var(--text);background:var(--bg);border-radius:10px;padding:10px 12px}
+.item .tip b{color:var(--ink);margin-right:6px}
+.soon{margin-top:auto;align-self:flex-start;font-size:13px;font-weight:600;color:var(--muted);border:1.5px dashed var(--line-strong);border-radius:999px;padding:6px 14px}
+.disclose{font-size:14px;color:var(--muted);background:var(--bg);border-radius:12px;padding:14px 16px}
+
+/* cta + footer */
+.final{display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px}
+.final h2{font-size:clamp(32px,4.6vw,56px);line-height:1.15;letter-spacing:-0.035em}
+.btn-ink{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn-ink:hover{color:var(--bg)}
+footer{background:var(--panel);color:var(--panel-muted)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;padding-block:44px;font-size:14px}
+footer b{color:var(--panel-text);font-size:16px}
+footer a{color:var(--panel-text)}
+footer a:hover{color:var(--accent)}
+footer .col{display:flex;flex-direction:column;gap:8px;max-width:36em}
+</style>
+
+</head>
+<body>
+<header>
+  <nav class="wrap" aria-label="주 메뉴">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true">O<sub>2</sub></span>
+      <span class="brand-name"><b>산소계산소</b><small>O₂ PACE CALC</small></span>
+    </a>
+    <div class="navlinks">
+      <a href="#calc">페이스 계산기</a>
+      <a href="#judge" class="hide-sm">러닝 판정</a>
+      <a href="#log" class="hide-sm">내 기록</a>
+      <a href="#kcal" class="hide-sm">칼로리</a>
+      <a href="#zones" class="hide-sm">훈련 존</a>
+      <a href="#plan" class="hide-sm">Sub-45 예시</a>
+      <a href="#gear" class="hide-sm">러닝 장비</a>
+      <a class="pill" href="https://www.instagram.com/sanso.calc">@sanso.calc</a>
+    </div>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="wrap hero">
+    <div class="stack" style="gap:26px">
+      <p class="eyebrow">내 산소로 계산하는 러닝 페이스</p>
+      <h1>감으로 뛰는 러닝은<br>이제 그만.</h1>
+      <p class="lead">10km 기록이 몇 달째 제자리라면, 더 많이 뛰는 것보다 <strong>정확한 페이스로</strong> 뛰는 게 먼저입니다. 최근 기록 하나만 넣으면 이지런·템포런·인터벌 페이스를 계산해 드려요.</p>
+      <div class="row">
+        <a class="btn btn-accent" href="#calc">내 페이스 계산하기
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+        <a class="btn btn-ghost" href="#zones">훈련 존 알아보기</a>
+      </div>
+      <p class="fine">무료 · 회원가입 없음 · 입력값은 어디에도 저장되지 않아요</p>
+    </div>
+
+    <div class="datacard" aria-label="예시: 10K 45분 목표 페이스">
+      <div class="top"><span>예시 · 10K 목표 45:00</span><span class="tag">SUB-45</span></div>
+      <div class="big"><span class="n">45.3</span><span>VDOT</span></div>
+      <div class="kv">
+        <div><span>E · 이지런 <small>(Zone 2 대응)</small></span><span class="mono">5'32"–6'06" /km</span></div>
+        <div><span>M · 마라톤</span><span class="mono">4'50"–5'00" /km</span></div>
+        <div><span>T · 템포런</span><span class="mono">4'32"–4'42" /km</span></div>
+        <div><span>I · 인터벌</span><span class="mono hl">4'09"–4'20" /km</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap section stack" style="gap:36px">
+      <h2 class="h2" style="max-width:22em">기록이 멈춘 러너에게 흔히 보이는 세 가지 패턴</h2>
+      <div class="grid">
+        <div class="card"><span class="num">01</span><h3>매일 '적당히 힘들게'</h3><p>쉬운 날은 너무 빠르고, 힘든 날은 덜 힘들게. 모든 러닝이 중간 강도에 몰리면 회복도 자극도 애매해집니다.</p></div>
+        <div class="card"><span class="num">02</span><h3>남의 페이스를 그대로</h3><p>크루나 유튜브의 인터벌 페이스는 그 사람의 기준입니다. 내 현재 체력과 맞지 않으면 부상이나 번아웃으로 이어지기 쉬워요.</p></div>
+        <div class="card"><span class="num">03</span><h3>워치 데이터는 있는데 해석이 없음</h3><p>심박, 케이던스, 페이스가 쌓여도 '그래서 오늘 몇 분 페이스로?'에 대한 답이 없다면 숫자는 그냥 기록일 뿐입니다.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="calc" class="wrap section stack" style="gap:36px;scroll-margin-top:72px">
+    <div class="calc-head">
+      <div class="stack">
+        <p class="eyebrow">FREE TOOL</p>
+        <h2 class="h2">VDOT 페이스 계산기</h2>
+        <p class="lead">최근 레이스 기록이나 목표 기록을 입력하세요. 결과는 바로 바뀝니다.</p>
+      </div>
+      <aside class="vinfo" aria-labelledby="vinfo-t">
+        <h3 id="vinfo-t">VDOT이 뭔가요?</h3>
+        <p>내 레이스 기록으로 거꾸로 계산한 <b>달리기 체력 점수</b>예요. 실험실에서 마스크를 쓰고 재는 최대산소섭취량(VO₂max)을, 실제로 낸 기록으로 추정한 값이라고 보면 돼요.</p>
+        <ul>
+          <li>숫자가 클수록 같은 거리를 더 빨리 뛸 수 있어요.</li>
+          <li>10K 50분 러너는 약 40, 45분 러너는 약 45예요. 이 구간에서는 1 오를 때마다 10K 기록이 약 1분 빨라져요.</li>
+          <li>이 숫자 하나로 이지런부터 인터벌까지 내 훈련 페이스가 정해져요.</li>
+        </ul>
+        <a href="#how">계산 원리 자세히 보기 →</a>
+      </aside>
+    </div>
+
+    <div class="calc">
+      <form class="inputs" id="calc-form" autocomplete="off">
+        <fieldset>
+          <legend>거리</legend>
+          <div class="seg" id="dist">
+            <button type="button" data-d="5k" aria-pressed="false">5K</button>
+            <button type="button" data-d="10k" aria-pressed="true">10K</button>
+            <button type="button" data-d="half" aria-pressed="false">하프</button>
+            <button type="button" data-d="full" aria-pressed="false">풀</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>기록</legend>
+          <div class="time">
+            <label for="t-h">시간<input id="t-h" type="number" inputmode="numeric" min="0" max="9" value="0"></label>
+            <label for="t-m">분<input id="t-m" type="number" inputmode="numeric" min="0" max="59" value="45"></label>
+            <label for="t-s">초<input id="t-s" type="number" inputmode="numeric" min="0" max="59" value="0"></label>
+          </div>
+        </fieldset>
+        <div>
+          <span class="label" id="preset-label">10K 목표 바로 넣기</span>
+          <div class="presets" id="presets"></div>
+        </div>
+        <button type="submit" class="go">내 페이스 계산하기</button>
+        <button type="button" class="save" id="save-race">이 기록을 내 VDOT으로 저장</button>
+        <p class="saved" id="save-race-msg" role="status"></p>
+        <p class="summary">현재 입력: <strong id="sum">10K 45:00</strong><br>평균 페이스 <strong id="avg">4'30" /km</strong></p>
+      </form>
+
+      <div class="result" aria-live="polite">
+        <div class="err" id="err" hidden>
+          <b>기록을 다시 확인해 주세요</b>
+          <span>선택한 거리에 맞는 기록(1km당 2분 30초~12분 범위)을 입력하면 결과가 표시됩니다.</span>
+        </div>
+        <div id="ok" class="stack" style="gap:24px">
+          <div class="result-head">
+            <div class="stack" style="gap:12px;min-width:0">
+              <div class="big"><span class="n" id="vdot">45.3</span><span>내 VDOT</span></div>
+              <div class="rank"><span class="rank-pill" id="rank">상위 —</span><span class="rank-cap" id="rank-cap"></span></div>
+              <div class="rank-bar" aria-hidden="true"><div class="rank-fill" id="rank-fill"></div></div>
+            </div>
+            <div class="preds mono" id="preds"></div>
+          </div>
+          <div class="tablebox">
+            <table>
+              <caption>TRAINING PACES</caption>
+              <thead><tr><th scope="col">존</th><th scope="col">1km 페이스</th><th scope="col">400m</th><th scope="col">이렇게 뛰세요</th></tr></thead>
+              <tbody id="zones-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <p class="note">상위 %는 영국 러닝 기록 사이트 Fetch Everyone 회원 10만여 명의 개인 최고 기록 분포와, 입력한 거리 기준으로 비교한 값이에요. 성별·나이는 구분하지 않았고, 기록을 꾸준히 관리하는 러너들이라 일반 대회 참가자보다 빠른 편이에요.</p>
+        <p class="note">Daniels–Gilbert 산소섭취량 공식으로 계산한 추정치입니다. 더위·언덕·컨디션에 따라 페이스보다 체감 강도와 심박을 우선하세요.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="judge" class="band" style="scroll-margin-top:72px">
+    <div class="wrap section stack" style="gap:36px">
+      <div class="stack">
+        <p class="eyebrow">RUN CHECK</p>
+        <h2 class="h2">오늘 러닝, 어느 존이었을까?</h2>
+        <p class="lead">워치에 찍힌 거리와 시간을 넣으면 위 계산기의 내 VDOT을 기준으로 실제 강도를 판정해요. 마라톤 페이스런은 그 페이스로 뛴 구간의 기록을, 인터벌은 한 구간(예: 1km 한 개)의 기록을 넣으세요.</p>
+      </div>
+      <div class="calc">
+        <form class="inputs" id="judge-form" autocomplete="off">
+          <fieldset>
+            <legend>오늘 하려던 훈련</legend>
+            <div class="seg seg6" id="intent">
+              <button type="button" data-i="E" aria-pressed="true">이지런</button>
+              <button type="button" data-i="L" aria-pressed="false">롱런</button>
+              <button type="button" data-i="M" aria-pressed="false">마라톤</button>
+              <button type="button" data-i="T" aria-pressed="false">템포런</button>
+              <button type="button" data-i="I" aria-pressed="false">인터벌</button>
+              <button type="button" data-i="?" aria-pressed="false">모름</button>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>워치 기록</legend>
+            <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+              <label for="j-km">거리 (km)<input id="j-km" type="number" inputmode="decimal" min="0.2" max="50" step="0.01" value="8"></label>
+              <label for="j-hr">평균 심박 (선택)<input id="j-hr" type="number" inputmode="numeric" min="60" max="230" value="158" placeholder="bpm"></label>
+            </div>
+            <div class="time" style="margin-top:8px">
+              <label for="j-h">시간<input id="j-h" type="number" inputmode="numeric" min="0" max="9" value="0"></label>
+              <label for="j-m">분<input id="j-m" type="number" inputmode="numeric" min="0" max="59" value="41"></label>
+              <label for="j-s">초<input id="j-s" type="number" inputmode="numeric" min="0" max="59" value="0"></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>내 심박 기준 (선택)</legend>
+            <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+              <label for="hr-max">최대심박<input id="hr-max" type="number" inputmode="numeric" min="120" max="230" value="190" placeholder="bpm"></label>
+              <span></span>
+            </div>
+            <p class="fine" style="margin-top:10px">지금 값은 예시예요. 레이스 막판이나 언덕 전력질주에서 워치에 찍힌 최고값을 넣으세요. '220 − 나이' 공식은 개인차가 커서 쓰지 않아요.</p>
+          </fieldset>
+          <fieldset>
+            <legend>심박 회복 (선택)</legend>
+            <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+              <label for="hr-end">끝날 때 심박<input id="hr-end" type="number" inputmode="numeric" min="80" max="230" value="165" placeholder="bpm"></label>
+              <label for="hr-2m">2분 뒤 심박<input id="hr-2m" type="number" inputmode="numeric" min="40" max="230" value="128" placeholder="bpm"></label>
+            </div>
+            <p class="fine" style="margin-top:10px">러닝을 마친 순간의 심박과, 걷거나 조깅하지 않고 서 있거나 앉아서 2분 쉰 뒤의 심박을 넣으세요. 매번 같은 자세로 재야 비교가 돼요.</p>
+          </fieldset>
+          <button type="submit" class="go">오늘 러닝 판정하기</button>
+          <button type="button" class="save" id="save-run">이 러닝을 내 기록에 저장</button>
+          <p class="saved" id="save-run-msg" role="status"></p>
+          <p class="summary">판정 기준: <strong id="j-base">10K 45:00 · VDOT 45.3</strong><br>기준을 바꾸려면 위 계산기에 내 최근 기록을 넣으세요.</p>
+        </form>
+
+        <div class="judge-out" aria-live="polite">
+          <div class="verdict"><span class="badge" id="j-badge">—</span><h3 id="j-title">—</h3></div>
+          <p class="jmsg" id="j-msg"></p>
+          <p class="jmsg hrnote" id="j-hrmsg" hidden></p>
+          <p class="jmsg hrnote" id="j-hrrmsg" hidden></p>
+          <div class="jstats" id="j-stats">
+            <div><span>오늘 평균 페이스</span><b id="j-pace">—</b></div>
+            <div><span>목표 존 페이스</span><b id="j-target">—</b></div>
+            <div><span>목표와 차이</span><b id="j-diff">—</b></div>
+            <div><span>2분 심박 회복</span><b id="j-hrr">—</b></div>
+          </div>
+          <div class="gauge" id="j-gauge" hidden>
+            <div class="g-track" aria-hidden="true">
+              <div class="g-band" id="g-band"></div>
+              <span class="g-blab" id="g-blab"></span>
+              <div class="g-dot" id="g-dot"></div>
+              <span class="g-tag" id="g-tag"></span>
+            </div>
+            <div class="g-ends"><span>← 느리게</span><span>빠르게 →</span></div>
+          </div>
+          <div class="stack" style="gap:10px">
+            <div class="scale-row"><span class="scale-label">페이스</span><div class="scale" id="j-scale" aria-hidden="true">
+              <span data-z="rec">회복<small>느림</small></span>
+              <span data-z="E">E<small>이지</small></span>
+              <span data-z="M">M<small>마라톤</small></span>
+              <span data-z="T">T<small>템포</small></span>
+              <span data-z="I">I<small>인터벌+</small></span>
+            </div></div>
+            <div class="scale-row" id="j-hrrow" hidden><span class="scale-label">심박</span><div class="scale" id="j-hscale" aria-hidden="true"><span>회복</span><span>E</span><span>M</span><span>T</span><span>I 이상</span></div></div>
+            <div class="scale-legend"><span>채운 칸: 오늘 실제 강도</span><span>점선 칸: 하려던 훈련</span></div>
+          </div>
+          <p class="fine">언덕·더위·바람이 있던 날은 페이스만으로는 강도가 낮게 나와요. 평균 심박을 함께 넣으면 그런 날을 구분할 수 있어요.</p>
+        </div>
+      </div>
+
+      <div class="zonecard">
+        <div class="stack" style="gap:6px">
+          <h3 style="font-size:22px">내 존 표 · 페이스와 심박</h3>
+          <p class="fine" id="hz-sub">—</p>
+        </div>
+        <div class="zonebox">
+          <table class="ztable">
+            <thead><tr><th scope="col">존</th><th scope="col">권장 페이스 (1km)</th><th scope="col">심박 (bpm)</th><th scope="col">최대심박 대비</th></tr></thead>
+            <tbody id="hz-body"></tbody>
+          </table>
+        </div>
+        <p class="fine">심박 존은 대니얼스가 제시한 최대심박 대비 비율을 겹치지 않게 나눠서 계산해요 (E 65~79%, M 80~87%, T 88~92%, I 93% 이상).</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="log" style="scroll-margin-top:72px">
+    <div class="wrap section stack" style="gap:28px">
+      <div class="split">
+        <div class="stack">
+          <p class="eyebrow">MY LOG</p>
+          <h2 class="h2">내 기록, 쌓일수록 정확해져요</h2>
+          <p class="lead">레이스 기록은 VDOT 변화로, 러닝 기록은 심박 회복 추세로 보여드려요. 하루하루의 차이보다 같은 종류 훈련 6~8번의 평균이 더 믿을 만해요.</p>
+        </div>
+        <p class="fine" id="log-status" style="max-width:24em">기록을 불러오는 중이에요…</p>
+      </div>
+      <div class="logs">
+        <div class="logcard">
+          <div class="stack" style="gap:4px"><h3>VDOT 변화</h3><p class="fine" id="v-sum">—</p></div>
+          <div class="chart" id="v-chart"></div>
+        </div>
+        <div class="logcard">
+          <div class="stack" style="gap:4px"><h3>2분 심박 회복 추세</h3><p class="fine" id="h-sum">—</p></div>
+          <div class="chips" id="h-filter">
+            <button type="button" data-f="all" aria-pressed="true">전체</button>
+            <button type="button" data-f="E" aria-pressed="false">이지런</button>
+            <button type="button" data-f="L" aria-pressed="false">롱런</button>
+            <button type="button" data-f="M" aria-pressed="false">마라톤</button>
+            <button type="button" data-f="T" aria-pressed="false">템포런</button>
+            <button type="button" data-f="I" aria-pressed="false">인터벌</button>
+          </div>
+          <div class="chart" id="h-chart"></div>
+          <div class="legend"><span><i class="dot"></i>그날 기록</span><span><i class="line"></i>최근 6회 평균</span></div>
+        </div>
+      </div>
+      <div class="logcard">
+        <h3>최근 기록</h3>
+        <div class="zonebox">
+          <table class="ztable logtable">
+            <thead><tr><th scope="col">날짜</th><th scope="col">종류</th><th scope="col">기록</th><th scope="col">결과</th><th scope="col"><span class="sr">삭제</span></th></tr></thead>
+            <tbody id="log-body"></tbody>
+          </table>
+        </div>
+        <p class="fine" id="log-empty">아직 저장한 기록이 없어요. 위 페이스 계산기나 러닝 판정에서 저장 버튼을 눌러보세요.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="kcal" class="wrap section stack" style="gap:36px;scroll-margin-top:72px">
+    <div class="stack">
+      <p class="eyebrow">CALORIE &amp; WEIGHT</p>
+      <h2 class="h2">오늘 러닝으로 얼마나 태웠을까?</h2>
+      <p class="lead">체중과 달린 거리·시간을 넣으면 소모 칼로리와 지방 환산 감량을 계산해요. 러닝 전후 체중을 재었다면 땀으로 빠진 수분도 따로 알려드려요.</p>
+    </div>
+    <div class="calc">
+      <form class="inputs" id="kcal-form" autocomplete="off">
+        <fieldset>
+          <legend>내 체중</legend>
+          <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+            <label for="k-w">러닝 전 (kg)<input id="k-w" type="number" inputmode="decimal" min="30" max="200" step="0.1" value="65"></label>
+            <label for="k-w2">러닝 후 (선택)<input id="k-w2" type="number" inputmode="decimal" min="30" max="200" step="0.1" value="64.4" placeholder="kg"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>달린 기록</legend>
+          <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+            <label for="k-km">거리 (km)<input id="k-km" type="number" inputmode="decimal" min="0.5" max="60" step="0.01" value="8"></label>
+            <label for="k-f">주 몇 회?<input id="k-f" type="number" inputmode="numeric" min="1" max="7" value="3"></label>
+          </div>
+          <div class="time" style="margin-top:8px">
+            <label for="k-h">시간<input id="k-h" type="number" inputmode="numeric" min="0" max="9" value="0"></label>
+            <label for="k-m">분<input id="k-m" type="number" inputmode="numeric" min="0" max="59" value="45"></label>
+            <label for="k-s">초<input id="k-s" type="number" inputmode="numeric" min="0" max="59" value="0"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>목표 체중 (선택)</legend>
+          <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+            <label for="k-goal">목표 (kg)<input id="k-goal" type="number" inputmode="decimal" min="30" max="200" step="0.1" value="62" placeholder="kg"></label>
+            <label for="k-weeks">기간 (주)<input id="k-weeks" type="number" inputmode="numeric" min="1" max="104" value="12"></label>
+          </div>
+        </fieldset>
+        <button type="submit" class="go">칼로리 계산하기</button>
+        <p class="summary">지금 값은 예시예요. 평균 페이스 <strong id="k-pace">—</strong></p>
+      </form>
+
+      <div class="kcal-out" aria-live="polite">
+        <div class="err" id="k-err" hidden><b>입력을 확인해 주세요</b><span>체중(30~200kg), 거리, 시간을 넣으면 계산해요. 평균 페이스가 1km당 2분 30초~12분 사이여야 해요.</span></div>
+        <div id="k-ok" class="stack" style="gap:22px">
+          <div class="big"><span class="n" id="k-total">—</span><span>kcal 소모</span></div>
+          <div class="kstats">
+            <div><span>운동으로 더 태운 칼로리</span><b id="k-net">—</b><small>가만히 있어도 쓰는 양을 뺀 값</small></div>
+            <div><span>지방 환산 감량</span><b id="k-fat">—</b><small>순소모 ÷ 7,700kcal/kg</small></div>
+            <div><span id="k-mlabel">주 3회 × 4주면</span><b id="k-month">—</b><small>지방 환산, 식사량이 그대로일 때</small></div>
+          </div>
+          <div class="water" id="k-water" hidden></div>
+        </div>
+        <p class="fine">ACSM 러닝 대사 공식(평지 기준)으로 추정한 값이에요. 실제 소모는 언덕·바람·개인 차이로 달라지고, 7,700kcal = 지방 1kg은 어림값이라 장기간 실제 감량은 보통 이보다 적어요. 체중 관리는 식사와 회복을 함께 보세요.</p>
+      </div>
+    </div>
+
+    <div class="zonecard" id="plan" hidden aria-live="polite">
+      <div class="stack" style="gap:6px">
+        <h3 style="font-size:22px">목표 체중까지, 이렇게 달리세요</h3>
+        <p class="fine" id="plan-sub"></p>
+      </div>
+      <div class="jstats">
+        <div><span>줄일 체중</span><b id="p-lose">—</b></div>
+        <div><span>주당 감량 속도</span><b id="p-rate">—</b></div>
+        <div><span>필요한 주간 소모</span><b id="p-kcal">—</b></div>
+        <div><span>러닝만으로 하려면</span><b id="p-km">—</b></div>
+      </div>
+      <ol class="planlist" id="plan-body"></ol>
+      <p class="fine">7,700kcal = 지방 1kg은 어림값이라 실제 감량은 보통 이보다 느려요. 목표 체중은 건강 체중 범위 안에서 정하고, 식사를 크게 줄이는 방식은 피하세요.</p>
+    </div>
+  </section>
+
+  <section id="how" class="dark" style="scroll-margin-top:72px">
+    <div class="wrap section stack" style="gap:44px">
+      <div class="stack" style="gap:14px">
+        <p class="eyebrow">HOW IT WORKS</p>
+        <h2 class="h2" style="max-width:20em">VDOT은 '지금 내 체력'을 하나의 숫자로 요약합니다</h2>
+        <p class="lead">코치 잭 대니얼스와 생리학자 지미 길버트가 만든 공식은 레이스 기록으로부터 유효 최대산소섭취량을 추정합니다. 이 숫자 하나에서 각 훈련 강도의 페이스가 나옵니다.</p>
+      </div>
+      <div class="grid">
+        <div class="step"><span class="num">01</span><h3>기록 입력</h3><p>최근 5K·10K·하프·풀 기록 중 전력으로 뛴 것 하나. 목표 기록을 넣으면 '그 기록을 낼 체력'의 페이스가 나와요.</p></div>
+        <div class="step"><span class="num">02</span><h3>VDOT 산출</h3><p>달린 속도에 필요한 산소량을, 그 시간 동안 유지 가능한 최대산소섭취량 비율로 나눠 계산합니다.</p></div>
+        <div class="step"><span class="num">03</span><h3>존별 페이스</h3><p>VDOT의 일정 비율로 이지·마라톤·역치·인터벌 페이스를 역산합니다. 4~6주마다 새 기록으로 업데이트하세요.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="zones" class="wrap section stack" style="gap:36px;scroll-margin-top:72px">
+    <div class="stack">
+      <p class="eyebrow">TRAINING ZONES</p>
+      <h2 class="h2">네 가지 강도, 각자 다른 역할</h2>
+    </div>
+    <div class="zones">
+      <div class="zone"><div class="name"><span class="mono">E</span><span>이지런</span></div><p>대화가 가능한 편안한 강도. 주간 거리의 대부분을 차지하며 심폐 기반과 회복을 담당합니다. 흔히 말하는 Zone 2와 비슷한 영역이에요.</p><p class="ex">예) 40~70분 지속주</p></div>
+      <div class="zone"><div class="name"><span class="mono">M</span><span>마라톤 페이스</span></div><p>풀코스 예상 페이스. 10K가 목표라면 롱런 후반에 짧게 섞어 지구력을 다집니다.</p><p class="ex">예) 롱런 마지막 15~20분</p></div>
+      <div class="zone"><div class="name"><span class="mono">T</span><span>템포런 (역치)</span></div><p>'편안하게 힘든' 강도. 젖산이 쌓이기 시작하는 지점을 끌어올려 10K 후반 페이스 유지력을 키웁니다.</p><p class="ex">예) 20분 지속 또는 1.6km × 3–4</p></div>
+      <div class="zone"><div class="name"><span class="mono">I</span><span>인터벌</span></div><p>최대산소섭취량 근처의 강한 자극. 3~5분 반복으로 심폐 상한선을 높입니다.</p><p class="ex">예) 1km × 5, 회복 조깅 3분</p></div>
+    </div>
+  </section>
+
+  <section id="plan" class="band" style="scroll-margin-top:72px">
+    <div class="wrap section stack" style="gap:36px">
+      <div class="split">
+        <div class="stack">
+          <p class="eyebrow">SAMPLE WEEK · VDOT 45</p>
+          <h2 class="h2">10K Sub-45를 위한 주 4회 예시</h2>
+        </div>
+        <p class="lead" style="max-width:26em;font-size:16px">강도 높은 날은 주 2회까지. 나머지는 이지런으로 채워 회복과 자극의 균형을 맞춥니다.</p>
+      </div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px">
+        <div class="day"><span class="when">화요일</span><span class="chip hard">I · 인터벌</span><b>1km × 5</b><p>4'09"–4'20"/km, 사이 3분 조깅. 워밍업·쿨다운 각 15분 이지.</p></div>
+        <div class="day"><span class="when">목요일</span><span class="chip">E · 이지런</span><b>45분</b><p>5'32"–6'06"/km. 끝에 100m 가속주 4개.</p></div>
+        <div class="day"><span class="when">토요일</span><span class="chip hard">T · 템포런</span><b>20분 지속</b><p>4'32"–4'42"/km. 대화가 짧게만 가능한 강도를 유지.</p></div>
+        <div class="day"><span class="when">일요일</span><span class="chip">E · 롱런</span><b>70~80분</b><p>이지 페이스로 천천히. 주간 거리의 25~30% 이내.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap section stack" style="gap:36px">
+    <div class="split">
+      <div class="stack">
+        <p class="eyebrow">ON INSTAGRAM</p>
+        <h2 class="h2">매주 하나씩, 숫자로 풀어드려요</h2>
+      </div>
+      <a class="btn btn-ghost" href="https://www.instagram.com/sanso.calc" style="border-color:var(--ink);font-size:16px;min-height:48px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"/></svg>
+        @sanso.calc 팔로우</a>
+    </div>
+    <div class="posts">
+      <article class="post p1" aria-label="카드뉴스 1/3">
+        <span class="idx">1 / 3</span>
+        <svg class="watch" width="120" height="120" viewBox="0 0 120 120" aria-hidden="true"><rect x="44" y="2" width="32" height="20" rx="4" fill="#2C3330"/><rect x="44" y="98" width="32" height="20" rx="4" fill="#2C3330"/><circle cx="60" cy="60" r="42" fill="#1C2220" stroke="#3B423F" stroke-width="3"/><path d="M60 22 A38 38 0 0 1 96 50" fill="none" stroke="#D4F53C" stroke-width="5" stroke-linecap="round"/><text x="60" y="58" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="15" fill="#E8EBE4">5'??"</text><text x="60" y="76" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="#A3ACA7">/km</text></svg>
+        <p>아직도<br>감으로 뛰시나요?</p>
+      </article>
+      <article class="post p2" aria-label="카드뉴스 2/3">
+        <span class="idx">2 / 3 · 10K SUB-45</span>
+        <div class="stack" style="gap:10px">
+          <div class="r"><b>Zone 2 (E)</b><span class="mono">5'32"–6'06"</span></div>
+          <div class="r"><b>템포 (T)</b><span class="mono">4'32"–4'42"</span></div>
+          <div class="r"><b>인터벌 (I)</b><span class="mono hlbox">4'09"–4'20"</span></div>
+        </div>
+        <p>목표가 같아도<br>페이스는 숫자로 정해요</p>
+      </article>
+      <article class="post p3" aria-label="카드뉴스 3/3">
+        <span class="idx">3 / 3</span>
+        <p>내 기록으로<br>내 페이스 계산하기</p>
+        <div class="cta"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>프로필 링크에서 무료로</div>
+      </article>
+    </div>
+  </section>
+
+  <section id="gear" class="gear band" style="scroll-margin-top:72px">
+    <div class="wrap section stack" style="gap:32px">
+      <div class="stack">
+        <p class="eyebrow">GEAR NOTES</p>
+        <h2 class="h2">훈련 존에 맞춘 장비 메모</h2>
+        <p class="lead">비싼 장비보다 용도가 먼저. 어떤 훈련에 어떤 장비가 필요한지 기준부터 정리했어요.</p>
+      </div>
+      <div class="grid">
+        <div class="item"><div class="ph" aria-hidden="true"><svg width="56" height="56" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 30c0-4 2-9 4-13l7 3c2 1 4 0 5-2l2-4 6 4c3 2 6 4 9 5 3 1 5 3 5 6v3H6z"/><path d="M6 33v4h37v-4"/><path d="M21 24l3 2M24 21l3 2"/></svg></div><span class="for">E · 이지런 / 롱런</span><h3>쿠션형 데일리 러닝화</h3><p>주간 거리의 대부분을 책임지는 신발. 발볼과 착지 습관에 맞는지가 핵심입니다.</p><p class="tip"><b>고를 때</b> 발이 붓는 오후에 신어보고, 발끝 앞에 엄지 한 마디 정도 여유를 두세요. 보통 500~800km마다 교체해요.</p><span class="soon">추천 상품 준비 중</span></div>
+        <div class="item"><div class="ph" aria-hidden="true"><svg width="56" height="56" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M27 5L11 27h12l-3 16 17-23H25z"/></svg></div><span class="for">T · I 빠른 훈련</span><h3>가벼운 템포·레이스화</h3><p>빠른 페이스 세션과 레이스 당일용. 데일리화와 번갈아 신어 부담을 나눠요.</p><p class="tip"><b>고를 때</b> 레이스 당일 처음 신지 말고, 템포런·인터벌에서 최소 2~3번은 미리 신어보세요.</p><span class="soon">추천 상품 준비 중</span></div>
+        <div class="item"><div class="ph" aria-hidden="true"><svg width="56" height="56" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M24 5C24 5 11 20 11 29a13 13 0 0 0 26 0C37 20 24 5 24 5z"/><path d="M18 30a6 6 0 0 0 6 6"/></svg></div><span class="for">60분 이상 · 여름 훈련</span><h3>전해질 음료·파우더</h3><p>땀을 많이 흘리는 롱런과 더운 날 세션에서 수분과 나트륨을 함께 보충합니다.</p><p class="tip"><b>고를 때</b> 나트륨 함량을 확인하고, 레이스 날 처음 먹지 말고 훈련 때 미리 테스트하세요.</p><span class="soon">추천 상품 준비 중</span></div>
+      </div>
+      <p class="disclose">추천 상품은 준비 중이에요. 상품 링크가 추가되면 제휴(쿠팡 파트너스) 여부와 수수료 고지를 함께 표시할게요.</p>
+    </div>
+  </section>
+
+  <section class="wrap section final">
+    <h2>오늘 러닝, 몇 분 페이스로?</h2>
+    <p class="lead">답은 이미 내 기록 안에 있어요.</p>
+    <a class="btn btn-ink" href="#calc">무료로 계산하기</a>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="col">
+      <b>산소계산소</b>
+      <span>VDOT 계산은 Daniels–Gilbert 공식에 기반한 추정치이며, 잭 대니얼스 또는 관련 상표권자와 제휴·후원 관계가 없습니다. 의학적 조언이 아니며 통증이나 이상 증상이 있으면 전문가와 상담하세요.</span>
+    </div>
+    <div class="col">
+      <a href="https://www.instagram.com/sanso.calc">Instagram @sanso.calc</a>
+      <a href="https://linktr.ee/sanso.calc">linktr.ee/sanso.calc</a>
+      <span>© 2026 산소계산소</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var DIST={'5k':5000,'10k':10000,'half':21097.5,'full':42195};
+  var LABEL={'5k':'5K','10k':'10K','half':'하프','full':'풀'};
+  var dist='10k', curV=null, curBase='', intent='E';
+  function vo2(v){return -4.6+0.182258*v+0.000104*v*v}
+  function pct(t){return 0.8+0.1894393*Math.exp(-0.012778*t)+0.2989558*Math.exp(-0.1932605*t)}
+  function vdotOf(d,t){return vo2(d/t)/pct(t)}
+  function vel(o){return(-0.182258+Math.sqrt(0.182258*0.182258+4*0.000104*(o+4.6)))/(2*0.000104)}
+  function pace(sec){var x=Math.round(sec);return Math.floor(x/60)+"'"+String(x%60).padStart(2,'0')+'"'}
+  function clock(min){var x=Math.round(min*60),h=Math.floor(x/3600),m=Math.floor(x%3600/60),s=x%60;
+    return (h>0?h+':'+String(m).padStart(2,'0'):String(m))+':'+String(s).padStart(2,'0')}
+  function predict(V,d){var lo=d/1000*1.5,hi=d/1000*15;for(var i=0;i<60;i++){var mid=(lo+hi)/2;if(vdotOf(d,mid)>V)lo=mid;else hi=mid}return(lo+hi)/2}
+  var $=function(id){return document.getElementById(id)};
+  // One source of truth for recommended training paces (sec/km, [fast, slow]) used by every section
+  function targets(V){
+    var at=function(fr){return 1000/vel(V*fr)*60};
+    var m=predict(V,42195)*60/42.195;
+    return {E:[at(0.70),at(0.62)], L:[at(0.66),at(0.62)], M:[m-5,m+5], T:[at(0.90),at(0.86)], I:[at(1.0),at(0.95)]};
+  }
+  var hIn=$('t-h'),mIn=$('t-m'),sIn=$('t-s');
+  function bindGo(formId,fn,outSel){
+    $(formId).addEventListener('submit',function(e){
+      e.preventDefault(); fn();
+      var o=document.querySelector(outSel);
+      o.classList.remove('flash'); void o.offsetWidth; o.classList.add('flash');
+      var r=o.getBoundingClientRect();
+      if(r.top<0||r.top>window.innerHeight*0.55){
+        var rm=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        o.scrollIntoView({behavior:rm?'auto':'smooth',block:'start'});
+      }
+    });
+  }
+
+  var PRESETS={
+    '5k':[['Sub-30',30],['Sub-25',25],['Sub-22',22],['Sub-20',20]],
+    '10k':[['Sub-55',55],['Sub-50',50],['Sub-45',45],['Sub-40',40]],
+    'half':[['Sub-2:00',120],['Sub-1:50',110],['Sub-1:40',100],['Sub-1:30',90]],
+    'full':[['Sub-4:30',270],['Sub-4',240],['Sub-3:30',210],['Sub-3',180]]
+  };
+  var presetFor='';
+  // Fetch Everyone race-time percentiles (best times of 100,000+ runners): [top %, seconds]
+  var PCT={
+    '5k':[[1,1015],[5,1092],[10,1148],[25,1270],[50,1443],[75,1694],[90,1974],[95,2193],[99,2884]],
+    '10k':[[1,2035],[5,2206],[10,2317],[25,2557],[50,2885],[75,3303],[90,3774],[95,4114],[99,5119]],
+    'half':[[1,4506],[5,4906],[10,5167],[25,5711],[50,6450],[75,7320],[90,8368],[95,9065],[99,11142]],
+    'full':[[1,9647],[5,10630],[10,11289],[25,12713],[50,14687],[75,17160],[90,19796],[95,21592],[99,26047]]
+  };
+  function topPct(d,sec){
+    var t=PCT[d];
+    if(sec<=t[0][1])return 0.5;
+    if(sec>=t[t.length-1][1])return 99.5;
+    for(var i=1;i<t.length;i++){if(sec<=t[i][1]){var a=t[i-1],b=t[i];return a[0]+(b[0]-a[0])*(sec-a[1])/(b[1]-a[1]);}}
+    return 99.5;
+  }
+  function drawPresets(){
+    var box=$('presets'), cur=(parseFloat(hIn.value)||0)*60+(parseFloat(mIn.value)||0)+(parseFloat(sIn.value)||0)/60;
+    if(presetFor!==dist){
+      presetFor=dist; box.textContent='';
+      $('preset-label').textContent=LABEL[dist]+' 목표 바로 넣기';
+      PRESETS[dist].forEach(function(p){
+        var b=document.createElement('button'); b.type='button'; b.dataset.t=p[1]; b.textContent=p[0];
+        box.appendChild(b);
+      });
+    }
+    box.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',Math.abs(+b.dataset.t-cur)<0.01?'true':'false')});
+  }
+  function setTime(min){
+    var x=Math.round(min*60); hIn.value=Math.floor(x/3600); mIn.value=Math.floor(x%3600/60); sIn.value=x%60;
+  }
+
+  function render(){
+    drawPresets();
+    var total=(parseFloat(hIn.value)||0)*60+(parseFloat(mIn.value)||0)+(parseFloat(sIn.value)||0)/60;
+    var d=DIST[dist],spk=total*60/(d/1000);
+    var valid=total>0&&spk>=150&&spk<=720;
+    $('sum').textContent=LABEL[dist]+' '+(total>0?clock(total):'—');
+    $('avg').textContent=valid?pace(spk)+' /km':'—';
+    $('err').hidden=valid; $('ok').hidden=!valid;
+    if(!valid){curV=null;judge();return;}
+    var V=vdotOf(d,total);
+    curV=V; curBase=LABEL[dist]+' '+clock(total)+' · VDOT '+V.toFixed(1);
+    $('vdot').textContent=V.toFixed(1);
+    var tp=topPct(dist,total*60);
+    $('rank').textContent=tp<1?'상위 1% 이내':tp>99?'하위 1%':'상위 약 '+Math.round(tp)+'%';
+    $('rank-cap').textContent=LABEL[dist]+' '+clock(total)+' · 러너 100명 중 약 '+Math.max(1,Math.round(tp))+'번째';
+    $('rank-fill').style.width=Math.max(2,100-tp)+'%';
+    var at=function(f){return vel(V*f)}, km=function(v){return 1000/v*60}, q=function(v){return 400/v*60};
+    var eLo=at(0.62),eHi=at(0.70),t=at(0.88),iv=at(0.975),lMid=at(0.66);
+    var LR={'5k':[8,12],'10k':[12,16],'half':[16,22],'full':[25,32]}[dist];
+    var lrMax=Math.min(LR[1],Math.floor(150*60/km(eLo))), capped=lrMax<LR[1], lrMin=Math.min(LR[0],lrMax-4);
+    var mPace=predict(V,42195)*60/42.195;
+    var TG=targets(V), r2=function(a){return pace(a[0])+'–'+pace(a[1])}, r4=function(a){return pace(a[0]*0.4)+'–'+pace(a[1]*0.4)};
+    var rows=[
+      ['E','이지런',r2(TG.E),r4(TG.E),'대화 가능한 강도. 주간 거리의 대부분 (Zone 2 대응)'],
+      ['L','롱런',r2(TG.L),r4(TG.L),lrMin+'~'+lrMax+'km, 주 1회. 이지 페이스 중 느린 쪽으로 ('+LABEL[dist]+' 목표 기준'+(capped?', 2시간 30분 이내':'')+')'],
+      ['M','마라톤',r2(TG.M),r4(TG.M),'롱런 후반 15~20분 섞기'],
+      ['T','템포',r2(TG.T),r4(TG.T),'20분 지속 또는 1.6km × 3–4'],
+      ['I','인터벌',r2(TG.I),r4(TG.I),'1km × 5, 회복 조깅 3분']
+    ];
+    var body=$('zones-body'); body.textContent='';
+    rows.forEach(function(z){
+      var tr=document.createElement('tr');
+      var th=document.createElement('th'); th.scope='row';
+      var c=document.createElement('span'); c.className='code'; c.textContent=z[0];
+      th.appendChild(c); th.appendChild(document.createTextNode(z[1])); tr.appendChild(th);
+      [z[2],z[3]].forEach(function(v){var td=document.createElement('td');td.className='mono';td.textContent=v;tr.appendChild(td)});
+      var u=document.createElement('td'); u.className='use'; u.textContent=z[4]; tr.appendChild(u);
+      body.appendChild(tr);
+    });
+    var pr=$('preds'); pr.textContent='';
+    [['5K',5000],['10K',10000],['하프',21097.5],['풀',42195]].forEach(function(p){
+      var div=document.createElement('div'),a=document.createElement('span'),b=document.createElement('span');
+      a.textContent=p[0]+' 예상'; b.textContent=clock(predict(V,p[1]));
+      div.appendChild(a); div.appendChild(b); pr.appendChild(div);
+    });
+    judge();
+    kcal();
+  }
+
+  var ZONES=[
+    {k:'rec',name:'회복 조깅',lo:0,hi:0.59},
+    {k:'E',name:'E · 이지',lo:0.59,hi:0.74},
+    {k:'M',name:'M · 마라톤',lo:0.74,hi:0.84},
+    {k:'T',name:'T · 템포',lo:0.84,hi:0.92},
+    {k:'I',name:'I · 인터벌',lo:0.92,hi:9}
+  ];
+  var INTENT={E:{z:1,k:'E',label:'이지런'},L:{z:1,k:'L',label:'롱런'},M:{z:2,k:'M',label:'마라톤 페이스런'},T:{z:3,k:'T',label:'템포런'},I:{z:4,k:'I',label:'인터벌'},'?':{z:null,label:''}};
+  var ABOUT=['회복주로 좋은 아주 편한 강도예요.','대화가 가능한 이지 강도예요. 주간 거리의 대부분을 여기서 채우면 돼요.','마라톤 페이스 구간이에요. 이지런으로 하기엔 힘들고, 강훈련으로 치기엔 약한 강도예요.','역치(템포) 강도예요. 주 1~2회면 충분한 강훈련이에요.','인터벌 이상의 강도예요. 3~5분 반복에 쓰는 강한 자극이에요.'];
+  function paceAtF(f){return 1000/vel(curV*f)*60}
+  function sgn(sec){var a=Math.round(Math.abs(sec));return (sec<0?'−':'+')+(a>=60?Math.floor(a/60)+"'"+String(a%60).padStart(2,'0')+'"':a+'"')}
+
+  var HRN=['회복','E(이지)','M(마라톤)','T(템포)','I(인터벌) 이상'];
+  var HRP=[0,0.65,0.80,0.88,0.93];
+  function hrState(){
+    var mx=parseFloat($('hr-max').value);
+    return {ok:mx>=120&&mx<=230,max:mx};
+  }
+  function hrr(){
+    var e=parseFloat($('hr-end').value), t=parseFloat($('hr-2m').value), box=$('j-hrrmsg'), out=$('j-hrr');
+    if(!(e>=80&&e<=230&&t>=40&&t<=230)){out.textContent='입력 안 함';box.hidden=true;return;}
+    if(t>=e){out.textContent='—';box.hidden=false;box.textContent='2분 뒤 심박은 끝날 때 심박보다 낮아야 해요. 값을 확인해 주세요.';return;}
+    var d=Math.round(e-t), lvl, txt;
+    if(d<22){lvl='느린 편';txt='피로 누적, 더위, 탈수, 수면 부족이 있으면 이렇게 나오기 쉬워요. 다음 강훈련은 하루 미루고 이지런으로 바꿔보세요. 컨디션이 좋은 날에도 계속 20대 초반 아래라면 전문가와 상담해 보세요.';}
+    else if(d<35){lvl='보통';txt='이지런 뒤라면 흔한 값이에요. 같은 종류 훈련끼리 비교해서 점점 커지는지 보세요.';}
+    else if(d<55){lvl='좋음';txt='심장이 빠르게 안정을 되찾고 있어요. 강한 훈련 뒤에 흔히 보이는 범위예요.';}
+    else{lvl='매우 빠름';txt='아주 빠르게 회복했어요. 다만 기록은 떨어지는데 이 값만 커진다면 과훈련 신호일 수 있어요.';}
+    out.textContent='−'+d+' bpm · '+lvl;
+    box.hidden=false;
+    box.textContent='심박 회복: 2분 동안 '+d+'bpm 내려갔어요 ('+lvl+'). '+txt+' 하루 사이 4~5bpm 차이는 측정 오차일 수 있어요. 같은 종류 훈련 6~8번의 평균으로 추세를 보세요.';
+  }
+  function zoneTable(hs){
+    var b=$('hz-body'); b.textContent='';
+    if(!curV){$('hz-sub').textContent='위 페이스 계산기에 기록을 넣으면 채워져요.';return;}
+    $('hz-sub').textContent='기준: '+curBase+(hs.ok?' · 최대심박 '+hs.max:' · 심박 기준을 넣으면 심박 칸이 채워져요.');
+    for(var i=1;i<ZONES.length;i++){
+      var Z=ZONES[i], tr=document.createElement('tr');
+      var th=document.createElement('th'); th.scope='row';
+      var c=document.createElement('span'); c.className='code'; c.textContent=Z.k;
+      th.appendChild(c); th.appendChild(document.createTextNode(Z.name.split(' · ').pop())); tr.appendChild(th);
+      var tg=targets(curV)[Z.k], p=pace(tg[0])+'–'+pace(tg[1]);
+      var h,pc,dim=false;
+      if(!hs.ok){h='—';pc='—';}
+      else if(i===5){h='심박 판정 안 함';pc='—';dim=true;}
+      else{var lo=Math.round(hs.max*HRP[i]), hi=i===4?hs.max:Math.round(hs.max*HRP[i+1])-1;
+        h=lo+'–'+hi; pc=Math.round(HRP[i]*100)+'–'+(i===4?100:Math.round(HRP[i+1]*100)-1)+'%';}
+      [p,h,pc].forEach(function(v,j){var td=document.createElement('td');td.textContent=v;if(j===1&&dim)td.className='dim';tr.appendChild(td)});
+      b.appendChild(tr);
+    }
+  }
+  function hrPart(zi,hs){
+    var row=$('j-hrrow'), hm=$('j-hrmsg'), hc=$('j-hscale').querySelectorAll('span');
+    hc.forEach(function(c){c.className=''});
+    var avg=parseFloat($('j-hr').value);
+    if(!(avg>=60&&avg<=230)){row.hidden=true;hm.hidden=true;return;}
+    if(!hs.ok){row.hidden=true;hm.hidden=false;hm.textContent='평균 심박을 판정하려면 내 최대심박(120~230)을 넣어주세요.';return;}
+    var fh=avg/hs.max, hz=0;
+    for(var i=0;i<5;i++){if(fh>=HRP[i])hz=i;}
+    row.hidden=false; hc[hz].className='here';
+    var pz=Math.min(zi,4); hm.hidden=false;
+    if(hz>pz){
+      hm.textContent='페이스는 '+HRN[pz]+' 구간인데 심박은 '+HRN[hz]+' 구간이에요. 같은 페이스에 몸이 더 힘들게 일했다는 뜻이라 더위·피로·수면 부족·탈수 신호일 수 있어요. 오늘 같은 날은 페이스보다 심박에 맞춰 속도를 늦추세요.'+(hz-pz>=2?' 차이가 두 존 이상이라, 다음 강훈련 전에 하루 더 쉬는 것도 고려해 보세요.':'');
+    }else if(hz<pz){
+      hm.textContent='심박은 페이스보다 낮은 '+HRN[hz]+' 구간이에요. 같은 속도를 더 적은 힘으로 뛰었다는 뜻이라, 체력이 올랐다면 최근 기록으로 계산기를 업데이트할 때예요. 단, 짧은 인터벌 구간은 손목 심박이 늦게 따라오니 이 차이는 무시해도 돼요.';
+    }else{
+      hm.textContent='페이스와 심박이 모두 '+HRN[hz]+' 구간이에요. 두 기준이 일치하니 이 판정을 믿어도 돼요.';
+    }
+    hm.textContent='평균 심박 '+Math.round(avg)+'bpm(최대심박의 '+Math.round(avg/hs.max*100)+'%). '+hm.textContent;
+  }
+
+  function secTxt(s){var a=Math.round(Math.abs(s));return a>=60?Math.floor(a/60)+'분 '+(a%60?a%60+'초':''):a+'초';}
+  function setDiff(s){
+    var el=$('j-diff');
+    if(Math.round(s)===0){el.textContent='목표 범위 안 ✓';el.className='good';return;}
+    if(s<0){el.textContent='km당 '+secTxt(s).trim()+' 빠름';el.className='fast';}
+    else{el.textContent='km당 '+secTxt(s).trim()+' 느림';el.className='slow';}
+  }
+  function gauge(spk,fast,slow){
+    $('j-gauge').hidden=false;
+    var lo=Math.min(fast,spk), hi=Math.max(slow,spk), pad=Math.max(12,(hi-lo)*0.3); lo-=pad; hi+=pad;
+    var x=function(s){return Math.min(94,Math.max(6,(hi-s)/(hi-lo)*100))};
+    var bL=x(slow), bR=x(fast), band=$('g-band');
+    band.style.left=bL+'%'; band.style.width=Math.max(2,bR-bL)+'%';
+    var bl=$('g-blab'); bl.style.left=((bL+bR)/2)+'%'; bl.textContent='목표 '+pace(fast)+'–'+pace(slow);
+    var dx=x(spk); $('g-dot').style.left=dx+'%';
+    var tg=$('g-tag'); tg.style.left=Math.min(85,Math.max(15,dx))+'%'; tg.textContent='오늘 '+pace(spk);
+  }
+
+  function judge(){
+    var kmIn=parseFloat($('j-km').value)||0;
+    var mins=(parseFloat($('j-h').value)||0)*60+(parseFloat($('j-m').value)||0)+(parseFloat($('j-s').value)||0)/60;
+    hrr();
+    var badge=$('j-badge'),title=$('j-title'),msg=$('j-msg');
+    var cells=$('j-scale').querySelectorAll('span');
+    cells.forEach(function(c){c.className=''});
+    $('j-base').textContent=curV?curBase:'—';
+    var hs=hrState(); zoneTable(hs);
+    function blank(t,m){badge.className='badge';badge.textContent='—';title.textContent=t;msg.textContent=m;$('j-pace').textContent='—';$('j-target').textContent='—';$('j-diff').textContent='—';$('j-hrrow').hidden=true;$('j-hrmsg').hidden=true;$('j-gauge').hidden=true;$('j-diff').className='';}
+    if(!curV){blank('기준 기록이 필요해요','위 페이스 계산기에 최근 레이스 기록을 먼저 넣어주세요.');return;}
+    var spk=mins*60/kmIn;
+    if(!(kmIn>=0.2&&kmIn<=50&&mins>0&&spk>=150&&spk<=900)){blank('기록을 다시 확인해 주세요','거리(0.2~50km)와 시간을 넣으면 판정해요. 평균 페이스가 1km당 2분 30초~15분 사이여야 해요.');return;}
+    var v=kmIn*1000/mins, f=vo2(v)/curV, zi=0;
+    for(var i=0;i<ZONES.length;i++){if(f>=ZONES[i].lo)zi=i;}
+    $('j-pace').textContent=pace(spk)+' /km';
+    cells[zi].className='here';
+    hrPart(zi,hs);
+    var it=INTENT[intent], z=ZONES[zi];
+    if(it.z===null){
+      badge.className='badge ok';badge.textContent=z.name;
+      title.textContent='오늘은 '+z.name.split(' · ').pop()+' 강도였어요';
+      msg.textContent=ABOUT[zi];
+      $('j-target').textContent='—';$('j-diff').textContent='—';$('j-diff').className='';$('j-gauge').hidden=true;
+      return;
+    }
+    var tz=ZONES[it.z], TGi=targets(curV)[it.k];
+    cells[it.z].className=(zi===it.z)?'here':'target';
+    var fast=TGi[0], slow=TGi[1];
+    $('j-target').textContent=pace(fast)+'–'+pace(slow);
+    gauge(spk,fast,slow);
+    var inRange=spk>=fast-0.5&&spk<=slow+0.5, easySlow=(it.z===1&&spk>slow);
+    if(inRange||easySlow){
+      badge.className='badge ok';badge.textContent='OK · '+it.label;
+      title.textContent=inRange?it.label+' 권장 페이스대로 뛰었어요':'아주 편하게 뛰었어요';
+      msg.textContent=inRange?'계획한 강도와 실제 페이스가 맞아요. 이 리듬을 유지하세요.':'권장 페이스보다 느렸지만 문제없어요. 쉬운 날은 느린 쪽으로 틀리는 게 안전해요.';
+      setDiff(inRange?0:spk-slow);
+      return;
+    }
+    badge.className='badge warn';
+    if(spk<fast&&zi===it.z){
+      var d0=spk-fast;
+      var big=d0<-15;
+      badge.textContent=(big?'너무 빠름 · ':'조금 빠름 · ')+tz.name;
+      setDiff(d0);
+      title.textContent=big?it.label+'치고는 너무 빨랐어요':it.label+' 강도지만 권장 페이스보다 빨랐어요';
+      msg.textContent='같은 '+tz.name.split(' · ').pop()+' 구간 안이지만 권장보다 km당 '+secTxt(d0)+' 빨라요. '+pace(fast)+'–'+pace(slow)+'로 맞추면 같은 훈련 효과를 더 적은 피로로 얻을 수 있어요.';
+      return;
+    }
+    if(spk>slow&&zi===it.z){
+      var d3=spk-slow;
+      badge.textContent='조금 느림 · '+tz.name;
+      setDiff(d3);
+      title.textContent=it.label+' 강도지만 권장 페이스보다 느렸어요';
+      msg.textContent='같은 '+tz.name.split(' · ').pop()+' 구간 안이지만 권장보다 km당 '+secTxt(d3)+' 느려요. 다음엔 '+pace(fast)+'–'+pace(slow)+'에 맞춰보세요.';
+      return;
+    }
+    if(spk<fast){
+      var d1=spk-fast;
+      badge.textContent='너무 빠름 · '+z.name;
+      setDiff(d1);
+      if(it.z===1){
+        title.textContent=it.label+'인데 '+z.name.split(' · ').pop()+' 강도로 뛰었어요';
+        msg.textContent='쉬운 날이 회색지대로 들어갔어요. 이렇게 되면 회복이 덜 된 상태로 다음 강훈련을 맞게 돼요. km당 최소 '+Math.round(-d1)+'초 늦춰서 '+pace(fast)+'–'+pace(slow)+' 사이로 뛰세요.';
+      }else{
+        title.textContent=it.label+'치고는 빨랐어요 ('+z.name+')';
+        msg.textContent='계획보다 강한 자극이에요. 세트 후반에 페이스가 무너지거나 다음 훈련이 밀릴 수 있어요. '+pace(fast)+'–'+pace(slow)+' 사이를 지켜보세요.';
+      }
+    }else{
+      var d2=spk-slow;
+      badge.textContent='느림 · '+z.name;
+      setDiff(d2);
+      title.textContent=it.label+' 자극으로는 약했어요 ('+z.name+')';
+      msg.textContent='목표 강도까지 올라가지 못했어요. 피곤한 날이었다면 괜찮지만, 계속 이렇다면 기준 기록이 실제 체력보다 높게 잡혔을 수 있어요. 목표 페이스는 '+pace(fast)+'–'+pace(slow)+'예요.';
+    }
+  }
+
+  $('intent').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b)return;
+    intent=b.dataset.i;
+    this.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
+    judge();
+  });
+  ['j-km','j-h','j-m','j-s','j-hr','hr-max','hr-end','hr-2m'].forEach(function(id){$(id).addEventListener('input',judge)});
+  bindGo('judge-form',judge,'.judge-out');
+
+  function plan(w,npk,fq,kmv){
+    var card=$('plan'), g=parseFloat($('k-goal').value), wk=parseFloat($('k-weeks').value);
+    if(!(g>=30&&g<=200&&wk>=1&&wk<=104)){card.hidden=true;return;}
+    card.hidden=false;
+    var ol=$('plan-body'); ol.textContent='';
+    function li(parts,cls){var l=document.createElement('li');if(cls)l.className=cls;parts.forEach(function(p){if(typeof p==='string')l.appendChild(document.createTextNode(p));else{var b=document.createElement('b');b.textContent=p[0];l.appendChild(b);}});ol.appendChild(l);}
+    var ids=['p-lose','p-rate','p-kcal','p-km'];
+    if(g>=w){
+      ids.forEach(function(id){$(id).textContent='—'});
+      $('plan-sub').textContent='';
+      li(['목표 체중이 현재 체중보다 낮을 때 계산해요. 체중을 늘리는 계획은 이 계산기로 다루지 않아요.']);
+      return;
+    }
+    var lose=w-g, totalK=lose*7700, pctWk=lose/wk/w*100, origWk=wk;
+    if(pctWk>1){
+      wk=Math.ceil(lose/(w*0.01));
+      li([origWk+'주 만에 빼려면 매주 체중의 '+pctWk.toFixed(1)+'%를 빼야 해요. 주 1%를 넘으면 근육 손실과 부상 위험이 커져서, 아래 계획은 ',[wk+'주'],' 기준으로 다시 계산했어요.'],'warn');
+    }
+    var perWk=lose/wk, wkK=totalK/wk;
+    var nowWk=npk*kmv*fq, share=nowWk/wkK, needKm=wkK/npk;
+    $('plan-sub').textContent=w+'kg → '+g+'kg, '+wk+'주 계획 · 지금 러닝은 1km당 약 '+Math.round(npk)+'kcal를 더 태워요';
+    $('p-lose').textContent='−'+lose.toFixed(1)+' kg';
+    $('p-rate').textContent=perWk.toFixed(2)+' kg/주';
+    $('p-kcal').textContent=Math.round(wkK).toLocaleString('ko-KR')+' kcal';
+    $('p-km').textContent='주 '+Math.round(needKm)+' km';
+    var routine=['지금처럼 ',['주 '+fq+'회 × '+kmv+'km'],' 달리면 한 주에 약 '+Math.round(nowWk).toLocaleString('ko-KR')+'kcal, 목표의 ',[Math.min(999,Math.round(share*100))+'%'],'를 채워요. '];
+    if(share>=1){routine.push('러닝만으로 충분해요. 이 루틴이면 약 ',[Math.ceil(totalK/nowWk)+'주'],' 뒤 목표에 도달해요.');}
+    else{var cut=Math.round((wkK-nowWk)/7);
+      routine.push('나머지는 식단으로, 하루 ',['약 '+cut+'kcal'],' 덜 먹으면 '+wk+'주 안에 도달해요. '+(cut>500?'다만 하루 500kcal 넘게 줄이는 건 권하지 않아요. 러닝을 조금씩 늘리거나 기간을 늘려보세요. ':'')+'식단을 그대로 두면 약 '+Math.ceil(totalK/nowWk)+'주 걸려요.');}
+    li(routine);
+    var curKm=kmv*fq, perRun=needKm/fq;
+    var only=['러닝만으로 하려면 ',['주 '+Math.round(needKm)+'km'],', 주 '+fq+'회면 1회 ',[perRun.toFixed(1)+'km'],'씩 뛰어야 해요. '];
+    if(perRun>15){only.push('1회 거리가 너무 길어서 러닝만으로는 현실적이지 않아요. 식단과 함께하는 쪽을 권해요.');}
+    else if(needKm>curKm*1.1){only.push('지금(주 '+Math.round(curKm)+'km)보다 많아서, 부상을 피하려면 주간 거리를 한 주에 10%씩만 늘려가세요.');}
+    else{only.push('지금 러닝량 안에서 가능한 수준이에요.');}
+    li(only);
+    var paceTxt=curV?pace(1000/vel(curV*0.70)*60)+'–'+pace(1000/vel(curV*0.62)*60)+'/km':'위 페이스 계산기의 E 페이스';
+    li(['대부분은 ',['E 페이스('+paceTxt+')'],'로 편하게 길게 뛰세요. 러닝 칼로리는 속도보다 거리에 비례해서, 빠르게 짧게 뛰는 것보다 편하게 길게 뛰는 쪽이 부상 없이 더 많이 태워요. 강훈련(템포런)은 주 1회면 충분해요.']);
+  }
+
+  function kcal(){
+    var w=parseFloat($('k-w').value), w2=parseFloat($('k-w2').value), kmv=parseFloat($('k-km').value);
+    var fq=Math.min(7,Math.max(1,Math.round(parseFloat($('k-f').value)||1)));
+    var mins=(parseFloat($('k-h').value)||0)*60+(parseFloat($('k-m').value)||0)+(parseFloat($('k-s').value)||0)/60;
+    var spk=mins*60/kmv;
+    var ok=w>=30&&w<=200&&kmv>=0.5&&kmv<=60&&mins>0&&spk>=150&&spk<=720;
+    $('k-err').hidden=ok; $('k-ok').hidden=!ok;
+    $('k-pace').textContent=ok?pace(spk)+' /km':'—';
+    if(!ok){$('plan').hidden=true;return;}
+    var S=kmv*1000/mins;
+    var gross=(0.2*S+3.5)*w/1000*5*mins;
+    var net=(0.2*S)*w/1000*5*mins;
+    var fatG=net/7.7;
+    $('k-total').textContent=Math.round(gross).toLocaleString('ko-KR');
+    $('k-net').textContent=Math.round(net).toLocaleString('ko-KR')+' kcal';
+    $('k-fat').textContent=Math.round(fatG)+' g';
+    $('k-mlabel').textContent='주 '+fq+'회 × 4주면';
+    var mon=fatG*fq*4/1000;
+    $('k-month').textContent=(mon<1?Math.round(mon*1000)+' g':mon.toFixed(1)+' kg');
+    plan(w,net/kmv,fq,kmv);
+    var box=$('k-water');
+    if(w2>=30&&w2<w&&w-w2<=5){
+      var loss=w-w2, pctL=loss/w*100;
+      box.hidden=false; box.textContent='';
+      var t=document.createElement('span');
+      t.textContent='러닝 후 줄어든 '+loss.toFixed(1)+'kg 중 지방은 약 '+Math.round(fatG)+'g뿐이고, 나머지 대부분은 땀으로 빠진 수분이에요. 물을 마시면 돌아와요. 보충 권장량: ';
+      var b=document.createElement('b'); b.textContent=(loss*1.25).toFixed(1)+'–'+(loss*1.5).toFixed(1)+'L';
+      var t2=document.createElement('span');
+      t2.textContent=' (줄어든 체중 1kg당 1.25~1.5L).'+(pctL>=2?' 체중의 '+pctL.toFixed(1)+'%가 빠졌어요. 2%를 넘으면 수행 능력이 떨어질 수 있으니 다음엔 달리는 중에도 물을 챙기세요.':'');
+      box.appendChild(t); box.appendChild(b); box.appendChild(t2);
+    }else{box.hidden=true;}
+  }
+  ['k-w','k-w2','k-km','k-f','k-h','k-m','k-s','k-goal','k-weeks'].forEach(function(id){$(id).addEventListener('input',kcal)});
+  bindGo('kcal-form',kcal,'.kcal-out');
+  kcal();
+
+  /* ---------- my log ---------- */
+  var LK='sanso-log-v1', store={mode:'loading',db:null,uid:null,items:[]}, hf='all';
+  var KIND={E:'이지런',L:'롱런',M:'마라톤 페이스런',T:'템포런',I:'인터벌','?':'러닝'};
+  function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function md(s){var p=String(s||'').split('-');return p.length===3?(+p[1])+'/'+(+p[2]):'';}
+  function localSave(){try{localStorage.setItem(LK,JSON.stringify(store.items));return true;}catch(e){return false;}}
+  function goLocal(){
+    store.mode='local';store.db=null;
+    try{var raw=localStorage.getItem(LK);store.items=raw?JSON.parse(raw):[];if(!Array.isArray(store.items))store.items=[];}catch(e){store.mode='none';store.items=[];}
+    renderLog();
+  }
+  function addRecord(rec,msgEl,btn){
+    rec.createdAt=Date.now();
+    function done(t){msgEl.textContent=t;btn.disabled=false;}
+    btn.disabled=true;
+    if(store.mode==='db'){
+      store.db.collection('data/users/'+store.uid).add(rec).then(function(){done('저장했어요. 아래 “내 기록”에서 볼 수 있어요.');}).catch(function(e){
+        if(e&&e.code==='invalid_argument'){goLocal();addRecord(rec,msgEl,btn);msgEl.textContent='이 링크에서는 계정에 저장할 수 없어서, 이 브라우저에 저장했어요.';btn.disabled=false;}
+        else done(e&&e.code==='quota_exceeded'?'저장 공간이 가득 찼어요. 오래된 기록을 지우고 다시 저장해 주세요.':'저장하지 못했어요. 잠시 후 다시 눌러주세요.');
+      });
+      return;
+    }
+    if(store.mode==='local'){
+      rec.id='l'+rec.createdAt;store.items.push(rec);
+      done(localSave()?'저장했어요. 아래 “내 기록”에서 볼 수 있어요.':'이 브라우저에서는 저장이 막혀 있어서, 새로고침하면 사라져요.');
+      renderLog();return;
+    }
+    if(store.mode==='loading'){done('기록을 불러오는 중이에요. 잠시 후 다시 눌러주세요.');return;}
+    done('이 브라우저에서는 기록을 저장할 수 없어요. 개인정보 보호 모드라면 일반 창에서 열어주세요.');
+  }
+  function removeRecord(id){
+    if(store.mode==='db'){store.db.collection('data/users/'+store.uid).doc(id).delete().catch(function(){$('log-status').textContent='삭제하지 못했어요. 잠시 후 다시 해주세요.';});return;}
+    store.items=store.items.filter(function(r){return r.id!==id});localSave();renderLog();
+  }
+  var SVGNS='http://www.w3.org/2000/svg';
+  function sv(n,a,p){var e=document.createElementNS(SVGNS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+  function chart(box,pts,line,lineCls,fmtY,emptyMsg,label){
+    box.textContent='';
+    if(!pts.length){var d=document.createElement('div');d.className='empty';d.textContent=emptyMsg;box.appendChild(d);return;}
+    var W=600,H=230,L=46,R=50,T=18,B=30;
+    var ys=pts.map(function(p){return p.y}).concat(line.map(function(p){return p.y}));
+    var y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys);
+    if(y1-y0<4){var c=(y0+y1)/2;y0=c-2;y1=c+2;}
+    var pad=(y1-y0)*0.15;y0-=pad;y1+=pad;
+    var n=pts.length,X=function(i){return n===1?(L+W-R)/2:L+(W-L-R)*i/(n-1)},Y=function(v){return T+(H-T-B)*(1-(v-y0)/(y1-y0))};
+    var svg=sv('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':label},box);
+    for(var k=0;k<3;k++){var v=y0+(y1-y0)*k/2,yy=Y(v);sv('line',{x1:L,x2:W-R,y1:yy,y2:yy,'class':'ax'},svg);var t=sv('text',{x:L-8,y:yy+4,'text-anchor':'end','class':'tick'},svg);t.textContent=fmtY(v);}
+    var xl=sv('text',{x:X(0),y:H-8,'text-anchor':n===1?'middle':'start','class':'tick'},svg);xl.textContent=md(pts[0].date);
+    if(n>1){var xr=sv('text',{x:X(n-1),y:H-8,'text-anchor':'end','class':'tick'},svg);xr.textContent=md(pts[n-1].date);}
+    if(line.length>1){sv('path',{d:line.map(function(p,j){return (j?'L':'M')+X(p.i).toFixed(1)+' '+Y(p.y).toFixed(1)}).join(' '),'class':lineCls},svg);}
+    pts.forEach(function(p,i){sv('circle',{cx:X(i),cy:Y(p.y),r:5,'class':'pt'},svg);});
+    var lp=line.length?line[line.length-1]:{i:n-1,y:pts[n-1].y};
+    var lt=sv('text',{x:X(lp.i)+10,y:Y(lp.y)+4,'class':'last'},svg);lt.textContent=fmtY(lp.y);
+  }
+  function avg(a){return a.reduce(function(s,x){return s+x},0)/a.length;}
+  function renderLog(){
+    var st=$('log-status');
+    st.textContent=store.mode==='db'?'로그인한 내 계정에만 저장돼요. 사이트 주인을 포함해 다른 사람은 볼 수 없어요.':store.mode==='local'?'이 브라우저에만 저장돼요. 다른 기기나 브라우저에서는 보이지 않아요.':store.mode==='none'?'이 브라우저에서는 기록 저장이 꺼져 있어요.':'기록을 불러오는 중이에요…';
+    var items=store.items.slice().sort(function(a,b){return (a.date<b.date?-1:a.date>b.date?1:0)||(a.createdAt-b.createdAt)});
+    var races=items.filter(function(r){return r.type==='race'&&typeof r.vdot==='number'});
+    var vp=races.map(function(r,i){return {i:i,y:r.vdot,date:r.date}});
+    chart($('v-chart'),vp,vp,'vln',function(v){return v.toFixed(1)},'레이스나 기록 측정 결과를 저장하면 VDOT 변화가 여기에 그려져요.','VDOT 변화 그래프');
+    var vs=$('v-sum');
+    if(!races.length)vs.textContent='페이스 계산기에서 “이 기록을 내 VDOT으로 저장”을 누르면 쌓여요.';
+    else if(races.length===1)vs.textContent='첫 기록 VDOT '+races[0].vdot.toFixed(1)+' ('+md(races[0].date)+'). 다음 기록부터 변화를 보여드려요.';
+    else{var a=races[0].vdot,b=races[races.length-1].vdot,dv=b-a,dt=(predict(a,10000)-predict(b,10000))*60;
+      vs.textContent='첫 기록 대비 VDOT '+(dv>=0?'+':'−')+Math.abs(dv).toFixed(1)+(Math.abs(dt)>=1?' · 같은 체력이면 10K가 약 '+secTxt(dt).trim()+' '+(dt>0?'빨라진':'느려진')+' 셈이에요.':' · 거의 그대로예요.');}
+    var runs=items.filter(function(r){return r.type==='run'&&typeof r.hrr==='number'&&(hf==='all'||r.intent===hf)});
+    var hp=runs.map(function(r,i){return {i:i,y:r.hrr,date:r.date}});
+    var hl=hp.filter(function(p){return p.i>=2}).map(function(p){var w=runs.slice(Math.max(0,p.i-5),p.i+1).map(function(r){return r.hrr});return {i:p.i,y:avg(w)}});
+    var nm=hf==='all'?'전체':KIND[hf];
+    chart($('h-chart'),hp,hl,'ln',function(v){return Math.round(v)+''},(hf==='all'?'':nm+' ')+'심박 회복 기록이 아직 없어요. 러닝 판정에서 끝날 때·2분 뒤 심박을 넣고 저장해 보세요.','2분 심박 회복 추세 그래프');
+    var hs=$('h-sum'),nr=runs.length,vals=runs.map(function(r){return r.hrr});
+    if(!nr)hs.textContent='2분 동안 심박이 몇 bpm 내려갔는지 기록해요. 클수록 회복이 빠른 거예요.';
+    else if(nr<6)hs.textContent=nm+' '+nr+'/6회 기록했어요. 6회부터 평균을 보여드려요.';
+    else if(nr<12)hs.textContent=nm+' 최근 6회 평균 −'+Math.round(avg(vals.slice(-6)))+'bpm. 6회 더 쌓이면 이전과 비교해 드려요.';
+    else{var now=avg(vals.slice(-6)),prev=avg(vals.slice(-12,-6)),df=now-prev;
+      hs.textContent=nm+' 최근 6회 평균 −'+Math.round(now)+'bpm (이전 6회 −'+Math.round(prev)+'bpm). '+(df>=3?'회복이 좋아지고 있어요.':df<=-3?'회복이 느려지고 있어요. 피로가 쌓였는지 확인해 보세요.':'비슷한 수준을 유지하고 있어요.');}
+    if(hf==='all'&&nr)hs.textContent+=' 훈련 종류별로 보면 더 정확해요.';
+    var body=$('log-body');body.textContent='';
+    var recent=items.slice().reverse().slice(0,12);
+    $('log-empty').hidden=recent.length>0;
+    recent.forEach(function(r){
+      var tr=document.createElement('tr');
+      var kind,rec,res;
+      if(r.type==='race'){kind='레이스·기록 측정';rec=(LABEL[r.dist]||'')+' '+clock(r.timeMin);res='VDOT '+(+r.vdot).toFixed(1);}
+      else{kind=KIND[r.intent]||'러닝';rec=r.km+'km '+clock(r.timeMin)+' ('+pace(r.paceSec)+'/km)';res=(r.zone||'')+(typeof r.hrr==='number'?' · 심박 회복 −'+r.hrr:'');}
+      [md(r.date),kind,rec,res].forEach(function(v){var td=document.createElement('td');td.textContent=v;tr.appendChild(td);});
+      var td=document.createElement('td'),b=document.createElement('button');b.type='button';b.className='del';b.textContent='삭제';b.setAttribute('aria-label',md(r.date)+' '+kind+' 기록 삭제');
+      b.addEventListener('click',function(){if(b.classList.contains('armed')){removeRecord(r.id);}else{b.classList.add('armed');b.textContent='한 번 더';setTimeout(function(){b.classList.remove('armed');b.textContent='삭제';},3000);}});
+      td.appendChild(b);tr.appendChild(td);body.appendChild(tr);
+    });
+  }
+  $('h-filter').addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;hf=b.dataset.f;
+    this.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});renderLog();
+  });
+  $('save-race').addEventListener('click',function(){
+    var total=(parseFloat(hIn.value)||0)*60+(parseFloat(mIn.value)||0)+(parseFloat(sIn.value)||0)/60;
+    if(!curV){$('save-race-msg').textContent='만저 올바른 기록을 넣어주세요.';return;}
+    addRecord({type:'race',date:today(),dist:dist,timeMin:Math.round(total*600)/600,vdot:Math.round(curV*10)/10},$('save-race-msg'),this);
+  });
+  $('save-run').addEventListener('click',function(){
+    var m=$('save-run-msg'),kmIn=parseFloat($('j-km').value)||0;
+    var mins=(parseFloat($('j-h').value)||0)*60+(parseFloat($('j-m').value)||0)+(parseFloat($('j-s').value)||0)/60,spk=mins*60/kmIn;
+    if(!curV||!(kmIn>=0.2&&kmIn<=50&&mins>0&&spk>=150&&spk<=900)){m.textContent='거리와 시간을 확인한 뒤 저장해 주세요.';return;}
+    var f=vo2(kmIn*1000/mins)/curV,zi=0;for(var i=0;i<ZONES.length;i++){if(f>=ZONES[i].lo)zi=i;}
+    var rec={type:'run',date:today(),intent:intent,km:Math.round(kmIn*100)/100,timeMin:Math.round(mins*600)/600,paceSec:Math.round(spk),zone:ZONES[zi].name};
+    var ah=parseFloat($('j-hr').value);if(ah>=60&&ah<=230)rec.avgHr=Math.round(ah);
+    var e=parseFloat($('hr-end').value),t=parseFloat($('hr-2m').value);if(e>=80&&e<=230&&t>=40&&t<e)rec.hrr=Math.round(e-t);
+    addRecord(rec,m,this);
+  });
+  renderLog();
+  (function(){
+    var c=window.claude;
+    if(!(c&&typeof c.use==='function')){goLocal();return;}
+    Promise.all([c.use('db'),c.use('user')]).then(function(r){
+      var db=r[0],u=r[1];
+      if(!db||!u){goLocal();return;}
+      return u.id().then(function(uid){
+        if(!uid){goLocal();return;}
+        store.db=db;store.uid=uid;store.mode='db';renderLog();
+        var timer=setTimeout(function(){$('log-status').textContent='기록을 불러오는 데 시간이 걸리고 있어요. 잠시 후 다시 확인해 주세요.';},10000);
+        db.collection('data/users/'+uid).onSnapshot(function(s){
+          if(!s.metadata.fromCache)clearTimeout(timer);
+          store.items=s.docs.map(function(d){var o=Object.assign({},d.data());o.id=d.id;return o;});
+          renderLog();
+        },function(){clearTimeout(timer);goLocal();});
+      });
+    }).catch(function(){goLocal();});
+  })();
+
+  $('dist').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b)return;
+    if(curV&&b.dataset.d!==dist){setTime(predict(curV,DIST[b.dataset.d]));}
+    dist=b.dataset.d;
+    this.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
+    render();
+  });
+  $('presets').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b)return;
+    setTime(+b.dataset.t);
+    render();
+  });
+  [hIn,mIn,sIn].forEach(function(i){i.addEventListener('input',render)});
+  bindGo('calc-form',render,'.result');
+  render();
+})();
+</script>
+
+</body>
+</html>
