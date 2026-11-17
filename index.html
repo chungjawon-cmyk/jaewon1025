@@ -246,6 +246,16 @@ tbody td.use{white-space:normal;color:var(--panel-soft);font-size:14px;padding-r
 .del.armed{color:#B3261E;border-color:currentColor}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
+/* optional panels */
+.more{border:1.5px dashed var(--line-strong);border-radius:14px;padding:0 16px}
+.more summary{cursor:pointer;min-height:52px;display:flex;align-items:center;gap:10px;font-weight:600;list-style:none}
+.more summary::-webkit-details-marker{display:none}
+.more summary small{margin-left:auto;font-weight:500;font-size:13px;color:var(--muted)}
+.more summary::after{content:"+";font-family:var(--mono);font-size:20px;line-height:1;width:20px;text-align:center}
+.more[open] summary::after{content:"−"}
+.more-body{display:flex;flex-direction:column;gap:10px;padding-bottom:16px}
+.time input::placeholder{color:var(--muted);opacity:.7;font-size:18px}
+
 /* go button */
 .go{width:100%;min-height:54px;border-radius:14px;border:2px solid var(--on-accent);background:var(--accent);color:var(--on-accent);font:inherit;font-size:17px;font-weight:700;cursor:pointer}
 .go:hover{filter:brightness(0.96)}
@@ -477,32 +487,29 @@ footer .col{display:flex;flex-direction:column;gap:8px;max-width:36em}
           </fieldset>
           <fieldset>
             <legend>워치 기록</legend>
-            <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+            <div class="time">
               <label for="j-km">거리 (km)<input id="j-km" type="number" inputmode="decimal" min="0.2" max="50" step="0.01" value="8"></label>
-              <label for="j-hr">평균 심박 (선택)<input id="j-hr" type="number" inputmode="numeric" min="60" max="230" value="158" placeholder="bpm"></label>
-            </div>
-            <div class="time" style="margin-top:8px">
-              <label for="j-h">시간<input id="j-h" type="number" inputmode="numeric" min="0" max="9" value="0"></label>
-              <label for="j-m">분<input id="j-m" type="number" inputmode="numeric" min="0" max="59" value="41"></label>
+              <label for="j-m">분<input id="j-m" type="number" inputmode="numeric" min="0" max="599" value="41"></label>
               <label for="j-s">초<input id="j-s" type="number" inputmode="numeric" min="0" max="59" value="0"></label>
             </div>
+            <input id="j-h" type="hidden" value="0">
+            <p class="fine" style="margin-top:8px">워치에 찍힌 거리와 시간만 넣으면 돼요. 1시간이 넘으면 분에 이어서 적어주세요 (예: 1시간 10분 → 70분).</p>
           </fieldset>
-          <fieldset>
-            <legend>내 심박 기준 (선택)</legend>
-            <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-              <label for="hr-max">최대심박<input id="hr-max" type="number" inputmode="numeric" min="120" max="230" value="190" placeholder="bpm"></label>
-              <span></span>
+          <details class="more" id="hr-more">
+            <summary><span>심박도 넣으면 더 정확해요</span><small>선택</small></summary>
+            <div class="more-body">
+              <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+                <label for="j-hr">평균 심박<input id="j-hr" type="number" inputmode="numeric" min="60" max="230" placeholder="예: 158"></label>
+                <label for="hr-max">내 최대심박<input id="hr-max" type="number" inputmode="numeric" min="120" max="230" placeholder="예: 190"></label>
+              </div>
+              <p class="fine">최대심박은 한 번만 넣으면 이 브라우저가 기억해요. 레이스 막판이나 언덕 전력질주에서 찍힌 최고값을 넣으세요. '220 − 나이' 공식은 개인차가 커서 쓰지 않아요.</p>
+              <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+                <label for="hr-end">끝날 때 심박<input id="hr-end" type="number" inputmode="numeric" min="80" max="230" placeholder="예: 165"></label>
+                <label for="hr-2m">2분 뒤 심박<input id="hr-2m" type="number" inputmode="numeric" min="40" max="230" placeholder="예: 128"></label>
+              </div>
+              <p class="fine">2분 동안 걷지 말고 서 있거나 앉아서 쉰 뒤 재세요. 매번 같은 자세로 재야 비교가 돼요.</p>
             </div>
-            <p class="fine" style="margin-top:10px">지금 값은 예시예요. 레이스 막판이나 언덕 전력질주에서 워치에 찍힌 최고값을 넣으세요. '220 − 나이' 공식은 개인차가 커서 쓰지 않아요.</p>
-          </fieldset>
-          <fieldset>
-            <legend>심박 회복 (선택)</legend>
-            <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-              <label for="hr-end">끝날 때 심박<input id="hr-end" type="number" inputmode="numeric" min="80" max="230" value="165" placeholder="bpm"></label>
-              <label for="hr-2m">2분 뒤 심박<input id="hr-2m" type="number" inputmode="numeric" min="40" max="230" value="128" placeholder="bpm"></label>
-            </div>
-            <p class="fine" style="margin-top:10px">러닝을 마친 순간의 심박과, 걷거나 조깅하지 않고 서 있거나 앉아서 2분 쉰 뒤의 심박을 넣으세요. 매번 같은 자세로 재야 비교가 돼요.</p>
-          </fieldset>
+          </details>
           <button type="submit" class="go">오늘 러닝 판정하기</button>
           <button type="button" class="save" id="save-run">이 러닝을 내 기록에 저장</button>
           <p class="saved" id="save-run-msg" role="status"></p>
@@ -518,7 +525,7 @@ footer .col{display:flex;flex-direction:column;gap:8px;max-width:36em}
             <div><span>오늘 평균 페이스</span><b id="j-pace">—</b></div>
             <div><span>목표 존 페이스</span><b id="j-target">—</b></div>
             <div><span>목표와 차이</span><b id="j-diff">—</b></div>
-            <div><span>2분 심박 회복</span><b id="j-hrr">—</b></div>
+            <div hidden><span>2분 심박 회복</span><b id="j-hrr">—</b></div>
           </div>
           <div class="gauge" id="j-gauge" hidden>
             <div class="g-track" aria-hidden="true">
@@ -611,33 +618,34 @@ footer .col{display:flex;flex-direction:column;gap:8px;max-width:36em}
     <div class="calc">
       <form class="inputs" id="kcal-form" autocomplete="off">
         <fieldset>
-          <legend>내 체중</legend>
+          <legend>체중과 달린 기록</legend>
           <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-            <label for="k-w">러닝 전 (kg)<input id="k-w" type="number" inputmode="decimal" min="30" max="200" step="0.1" value="65"></label>
-            <label for="k-w2">러닝 후 (선택)<input id="k-w2" type="number" inputmode="decimal" min="30" max="200" step="0.1" value="64.4" placeholder="kg"></label>
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend>달린 기록</legend>
-          <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+            <label for="k-w">내 체중 (kg)<input id="k-w" type="number" inputmode="decimal" min="30" max="200" step="0.1" value="65"></label>
             <label for="k-km">거리 (km)<input id="k-km" type="number" inputmode="decimal" min="0.5" max="60" step="0.01" value="8"></label>
-            <label for="k-f">주 몇 회?<input id="k-f" type="number" inputmode="numeric" min="1" max="7" value="3"></label>
           </div>
-          <div class="time" style="margin-top:8px">
-            <label for="k-h">시간<input id="k-h" type="number" inputmode="numeric" min="0" max="9" value="0"></label>
-            <label for="k-m">분<input id="k-m" type="number" inputmode="numeric" min="0" max="59" value="45"></label>
+          <div class="time" style="margin-top:8px;grid-template-columns:repeat(2,minmax(0,1fr))">
+            <label for="k-m">분<input id="k-m" type="number" inputmode="numeric" min="0" max="599" value="45"></label>
             <label for="k-s">초<input id="k-s" type="number" inputmode="numeric" min="0" max="59" value="0"></label>
           </div>
+          <input id="k-h" type="hidden" value="0">
+          <p class="fine" style="margin-top:8px">체중은 한 번 넣으면 이 브라우저가 기억해요.</p>
         </fieldset>
-        <fieldset>
-          <legend>목표 체중 (선택)</legend>
-          <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-            <label for="k-goal">목표 (kg)<input id="k-goal" type="number" inputmode="decimal" min="30" max="200" step="0.1" value="62" placeholder="kg"></label>
-            <label for="k-weeks">기간 (주)<input id="k-weeks" type="number" inputmode="numeric" min="1" max="104" value="12"></label>
+        <details class="more">
+          <summary><span>땀 손실 · 목표 체중 플랜</span><small>선택</small></summary>
+          <div class="more-body">
+            <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+              <label for="k-w2">러닝 후 체중<input id="k-w2" type="number" inputmode="decimal" min="30" max="200" step="0.1" placeholder="예: 64.4"></label>
+              <label for="k-f">주 몇 회 뛰나요?<input id="k-f" type="number" inputmode="numeric" min="1" max="7" value="3"></label>
+            </div>
+            <div class="time" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+              <label for="k-goal">목표 체중 (kg)<input id="k-goal" type="number" inputmode="decimal" min="30" max="200" step="0.1" placeholder="예: 62"></label>
+              <label for="k-weeks">기간 (주)<input id="k-weeks" type="number" inputmode="numeric" min="1" max="104" value="12"></label>
+            </div>
+            <p class="fine">러닝 후 체중을 넣으면 땀으로 빠진 수분을, 목표 체중을 넣으면 주간 러닝 계획을 알려드려요.</p>
           </div>
-        </fieldset>
+        </details>
         <button type="submit" class="go">칼로리 계산하기</button>
-        <p class="summary">지금 값은 예시예요. 평균 페이스 <strong id="k-pace">—</strong></p>
+        <p class="summary">평균 페이스 <strong id="k-pace">—</strong></p>
       </form>
 
       <div class="kcal-out" aria-live="polite">
@@ -927,7 +935,8 @@ footer .col{display:flex;flex-direction:column;gap:8px;max-width:36em}
   }
   function hrr(){
     var e=parseFloat($('hr-end').value), t=parseFloat($('hr-2m').value), box=$('j-hrrmsg'), out=$('j-hrr');
-    if(!(e>=80&&e<=230&&t>=40&&t<=230)){out.textContent='입력 안 함';box.hidden=true;return;}
+    if(!(e>=80&&e<=230&&t>=40&&t<=230)){out.parentNode.hidden=true;box.hidden=true;return;}
+    out.parentNode.hidden=false;
     if(t>=e){out.textContent='—';box.hidden=false;box.textContent='2분 뒤 심박은 끝날 때 심박보다 낮아야 해요. 값을 확인해 주세요.';return;}
     var d=Math.round(e-t), lvl, txt;
     if(d<22){lvl='느린 편';txt='피로 누적, 더위, 탈수, 수면 부족이 있으면 이렇게 나오기 쉬워요. 다음 강훈련은 하루 미루고 이지런으로 바꿔보세요. 컨디션이 좋은 날에도 계속 20대 초반 아래라면 전문가와 상담해 보세요.';}
@@ -1303,6 +1312,13 @@ footer .col{display:flex;flex-direction:column;gap:8px;max-width:36em}
   });
   [hIn,mIn,sIn].forEach(function(i){i.addEventListener('input',render)});
   bindGo('calc-form',render,'.result');
+  function remember(id,key,force){
+    var el=$(id);
+    try{var v=localStorage.getItem(key);if(v&&(force||!el.value))el.value=v;}catch(e){}
+    el.addEventListener('change',function(){try{if(el.value)localStorage.setItem(key,el.value);else localStorage.removeItem(key);}catch(e){}});
+  }
+  remember('hr-max','sanso-hrmax');
+  remember('k-w','sanso-weight',true);
   render();
 })();
 </script>
